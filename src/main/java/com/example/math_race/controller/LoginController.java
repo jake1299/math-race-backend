@@ -39,20 +39,20 @@ public class LoginController {
         users.add(r1);
         users.add(r2);
 
-        System.out.println("הגיע ?");
-
         for(int i = 0; i < 100; i++) {
             users.add(new RaceParticipantEntity(UUID.randomUUID().toString().substring(0, 6).toUpperCase()));
         }
 
         race.setParticipants(users);
 
-        System.out.println("שניה לפני");
+        System.out.println("שומר מרוץ");
+        baseRepository.save(race);
+        System.out.println("סיים לשמור מרוץ ");
 
-        baseRepository.saveAll(users);
-
-        System.out.println("אני התחלתי ");
-
+        System.out.println("טוען מרוץ!");
+        RaceEntity n = baseRepository.loadObject(RaceEntity.class, race.getId());
+        System.out.println(n.toString());
+        System.out.println("סיים לטעון מרוץ!");
         return "השרת של Math Race עובד! הבקשה הגיעה אליי.";
     }
 }

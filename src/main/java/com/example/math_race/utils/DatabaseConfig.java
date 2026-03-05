@@ -22,9 +22,9 @@ public class DatabaseConfig {
         String dbUser,dbSchema, dbPass,host;
         Integer port;
 
-        boolean isLocal = true;
+        boolean isPublic = false;
 
-        if (!isLocal) {
+        if (isPublic) {
             dbUser = env.getProperty("DB_ROOT");
             dbSchema = env.getProperty("DB_SCHEMA");
             dbPass = env.getProperty("DB_PASSWORD");
