@@ -57,7 +57,7 @@
         <property name="deletionDate" type="java.util.Date" column="deletion_date"/>
     </class>
 
-    <class name="com.example.math_race.entities.RaceEntity" table="race_history" lazy="false">
+    <class name="com.example.math_race.entities.RaceHistoryEntity" table="race_history" lazy="false">
         <id name="id" type="int" column="id">
             <generator class="native"/>
         </id>
@@ -68,7 +68,6 @@
                      not-null="true"
                      fetch="join"/>
         <property name="targetScore" type="int" column="target_score" not-null="true"/>
-
         <property name="roomCode" type="string" column="room_code" not-null="true"/>
         <property name="name" type="string" column="race_name" not-null="true"/>
 
@@ -76,24 +75,20 @@
         <property name="updatedDate" type="java.util.Date" column="updated_date"/>
         <property name="deleted" type="boolean" column="deleted" not-null="true"/>
         <property name="deletionDate" type="java.util.Date" column="deletion_date"/>
-
-        <bag name="participants" cascade="all-delete-orphan" inverse="true" lazy="false" fetch="join">
-            <key column="race_id"/>
-            <one-to-many class="com.example.math_race.entities.RaceParticipantEntity"/>
-        </bag>
     </class>
 
-    <class name="com.example.math_race.entities.RaceParticipantEntity" table="race_participant" lazy="false">
+    <class name="com.example.math_race.entities.RaceParticipantHistoryEntity" table="race_participant" lazy="false">
         <id name="id" type="int" column="id">
             <generator class="native"/>
         </id>
 
         <many-to-one name="race"
-                     class="com.example.math_race.entities.RaceEntity"
+                     class="com.example.math_race.entities.RaceHistoryEntity"
                      column="race_id"
                      not-null="true" />
         <many-to-one name="user" class="com.example.math_race.entities.UserEntity" column="user_id" not-null="false"/>
         <property name="nickname" type="string" column="nick_name" not-null="true"/>
+        <property name="finalScore" type="int" column="final_score" not-null="true"/>
 
         <property name="creationDate" type="java.util.Date" column="creation_date" not-null="true"/>
         <property name="updatedDate" type="java.util.Date" column="updated_date"/>

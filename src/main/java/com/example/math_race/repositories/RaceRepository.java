@@ -1,6 +1,6 @@
 package com.example.math_race.repositories;
 
-import com.example.math_race.entities.RaceEntity;
+import com.example.math_race.entities.RaceHistoryEntity;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -15,11 +15,11 @@ public class RaceRepository extends BaseRepository {
         super(sf);
     }
 
-    public void saveRace(RaceEntity race) {
+    public void saveRace(RaceHistoryEntity race) {
 
     }
 
-    public RaceEntity loadRace(int oid) {
+    public RaceHistoryEntity loadRace(int oid) {
         return null;
     }
 }

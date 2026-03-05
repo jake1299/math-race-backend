@@ -1,7 +1,7 @@
 package com.example.math_race.controller;
 
-import com.example.math_race.entities.RaceEntity;
-import com.example.math_race.entities.RaceParticipantEntity;
+import com.example.math_race.entities.RaceHistoryEntity;
+import com.example.math_race.entities.RaceParticipantHistoryEntity;
 import com.example.math_race.entities.TokenEntity;
 import com.example.math_race.entities.UserEntity;
 import com.example.math_race.repositories.BaseRepository;
@@ -30,36 +30,29 @@ public class LoginController {
         baseRepository.save(user);
         baseRepository.save(token);
 
-        RaceEntity race = new RaceEntity("test " + Math.random(), user, 100);
+        System.out.println("עובד 1");
 
-        RaceParticipantEntity r1 = new RaceParticipantEntity(user);
-        RaceParticipantEntity r2 = new RaceParticipantEntity("ryan anderson");
+        RaceHistoryEntity raceHistory = new RaceHistoryEntity();
+        raceHistory.setHost(user);
+        raceHistory.setTargetScore(300);
 
-        List<RaceParticipantEntity> users = new ArrayList<>();
-        users.add(r1);
-        users.add(r2);
+        RaceParticipantHistoryEntity raceParticipantHistory = new RaceParticipantHistoryEntity();
+        raceParticipantHistory.setRace(raceHistory);
+        raceParticipantHistory.setFinalScore(89);
+        raceParticipantHistory.setNickname("Ani");
+        raceParticipantHistory.setUser(user);
 
-        for(int i = 0; i < 100; i++) {
-            users.add(new RaceParticipantEntity(UUID.randomUUID().toString().substring(0, 6).toUpperCase()));
-        }
+        baseRepository.save(raceHistory);
+        System.out.println("עובד 2");
 
-        race.setPlayers(users);
+        baseRepository.save(raceParticipantHistory);
+        System.out.println("עובד 3");
 
-        System.out.println("שומר מרוץ");
-        baseRepository.save(race);
-        System.out.println("סיים לשמור מרוץ ");
-
-        System.out.println("טוען מרוץ!");
-        RaceEntity n = baseRepository.loadObject(RaceEntity.class, race.getId());
-        System.out.println(n.toString());
-        System.out.println("משתתפים:");
-        System.out.println(n);
-        System.out.println("סיים לטעון מרוץ!");
-
-        System.out.println("טוען שחקן");
-        RaceParticipantEntity n1 = baseRepository.loadObject(RaceParticipantEntity.class, 1);
-        System.out.println(n1.getRace().toString());
-        System.out.println("סיים לטעון שחקן");
+        System.out.println("הדפסות");
+        System.out.println(baseRepository.loadObject(UserEntity.class, 1));
+        System.out.println(baseRepository.loadObject(TokenEntity.class, 1));
+        System.out.println(baseRepository.loadObject(RaceHistoryEntity.class, 1));
+        System.out.println(baseRepository.loadObject(RaceParticipantHistoryEntity.class, 1));
         return "השרת של Math Race עובד! הבקשה הגיעה אליי.";
     }
 }
