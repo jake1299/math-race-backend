@@ -30,8 +30,6 @@ public class LoginController {
         baseRepository.save(user);
         baseRepository.save(token);
 
-        System.out.println("עובד 1");
-
         RaceHistoryEntity raceHistory = new RaceHistoryEntity();
         raceHistory.setHost(user);
         raceHistory.setTargetScore(300);
@@ -43,10 +41,8 @@ public class LoginController {
         raceParticipantHistory.setUser(user);
 
         baseRepository.save(raceHistory);
-        System.out.println("עובד 2");
 
         baseRepository.save(raceParticipantHistory);
-        System.out.println("עובד 3");
 
         System.out.println("הדפסות");
         System.out.println(baseRepository.loadObject(UserEntity.class, 1));
