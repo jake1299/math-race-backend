@@ -2,7 +2,7 @@ package com.example.math_race.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +46,28 @@ public class RaceEntity extends BaseEntity {
     public boolean isFinished() {
         return status == RaceStatus.FINISHED;
     }
+
+//    public boolean setParticipants(List<RaceParticipantEntity> participants) {
+//        if (participants.size() > MAX_PARTICIPANTS) {
+//            return false;
+//        }
+//
+//        this.participants = new ArrayList<>();
+//        for (RaceParticipantEntity participant : participants) {
+//            addParticipant(participant);
+//        }
+//        return true;
+//    }
+//
+//    public boolean addParticipant(RaceParticipantEntity participant) {
+//        if (participants.size() >= MAX_PARTICIPANTS) {
+//            return false;
+//        }
+//
+//        participants.add(participant);
+////        participant.setRace(this);
+//        return true;
+//    }
 
     public int getParticipantCount() {
         return participants != null ? participants.size() : 0;
