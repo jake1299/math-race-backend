@@ -77,7 +77,7 @@
         <property name="deleted" type="boolean" column="deleted" not-null="true"/>
         <property name="deletionDate" type="java.util.Date" column="deletion_date"/>
 
-        <bag name="participants" cascade="all-delete-orphan" lazy="false" fetch="join">
+        <bag name="participants" cascade="all-delete-orphan" inverse="true" lazy="false" fetch="join">
             <key column="race_id"/>
             <one-to-many class="com.example.math_race.entities.RaceParticipantEntity"/>
         </bag>
@@ -88,6 +88,10 @@
             <generator class="native"/>
         </id>
 
+        <many-to-one name="race"
+                     class="com.example.math_race.entities.RaceEntity"
+                     column="race_id"
+                     not-null="true" />
         <many-to-one name="user" class="com.example.math_race.entities.UserEntity" column="user_id" not-null="false"/>
         <property name="nickname" type="string" column="nick_name" not-null="true"/>
 

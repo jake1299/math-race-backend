@@ -50,7 +50,10 @@ public class RaceEntity extends BaseEntity {
         if (newParticipants.size() > MAX_PARTICIPANTS) {
             return false;
         }
-        this.participants = newParticipants;
+        participants = new ArrayList<>();
+        for (RaceParticipantEntity newParticipant : newParticipants) {
+            addPlayer(newParticipant);
+        }
         return true;
     }
 
@@ -58,6 +61,7 @@ public class RaceEntity extends BaseEntity {
         if (participants.size() >= MAX_PARTICIPANTS) {
             return false;
         }
+        participant.setRace(this);
         participants.add(participant);
         return true;
     }

@@ -9,6 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RaceParticipantEntity extends BaseEntity {
 
+    private RaceEntity race;
     private String token;
     private UserEntity user;
     private String nickname;

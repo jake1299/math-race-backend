@@ -43,7 +43,7 @@ public class LoginController {
             users.add(new RaceParticipantEntity(UUID.randomUUID().toString().substring(0, 6).toUpperCase()));
         }
 
-        race.setParticipants(users);
+        race.setPlayers(users);
 
         System.out.println("שומר מרוץ");
         baseRepository.save(race);
@@ -53,8 +53,13 @@ public class LoginController {
         RaceEntity n = baseRepository.loadObject(RaceEntity.class, race.getId());
         System.out.println(n.toString());
         System.out.println("משתתפים:");
-        System.out.println(n.getParticipants());
+        System.out.println(n);
         System.out.println("סיים לטעון מרוץ!");
+
+        System.out.println("טוען שחקן");
+        RaceParticipantEntity n1 = baseRepository.loadObject(RaceParticipantEntity.class, r1.getUser().getId());
+        System.out.println(n1.toString());
+        System.out.println("סיים לטעון שחקן");
         return "השרת של Math Race עובד! הבקשה הגיעה אליי.";
     }
 }
