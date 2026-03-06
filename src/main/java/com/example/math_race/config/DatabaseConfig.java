@@ -1,4 +1,4 @@
-package com.example.math_race.utils;
+package com.example.math_race.config;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.springframework.beans.factory.annotation.Autowired;

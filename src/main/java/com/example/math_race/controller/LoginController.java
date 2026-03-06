@@ -1,54 +1,48 @@
 package com.example.math_race.controller;
 
-import com.example.math_race.entities.RaceHistoryEntity;
-import com.example.math_race.entities.RaceParticipantHistoryEntity;
-import com.example.math_race.entities.TokenEntity;
-import com.example.math_race.entities.UserEntity;
+import com.example.math_race.dto.request.ChangePasswordRequest;
+import com.example.math_race.dto.request.ForgotPasswordRequest;
+import com.example.math_race.dto.request.LoginRequest;
+import com.example.math_race.dto.request.RegisterRequest;
 import com.example.math_race.repositories.BaseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import static com.example.math_race.entities.TokenEntity.TokenType.*;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/auth")
 public class LoginController {
 
     @Autowired
     private BaseRepository baseRepository;
 
-    // http://localhost:8085/test-login
-    @RequestMapping("/test-login")
-    public String testLogin() {
-        UserEntity user = new UserEntity(Math.random()+"", "xxxx", Math.random()+"");
-        TokenEntity token = new TokenEntity(Math.random()+"", SESSION, user, new Date(), null, null);
-        baseRepository.save(user);
-        baseRepository.save(token);
+    // http://localhost:8085/api/auth/login
+    @PostMapping("/login")
+    public void login(@RequestBody LoginRequest request) {
+        System.out.println("--- Login Request Received ---");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Password: " + request.getPassword());
+    }
 
-        RaceHistoryEntity raceHistory = new RaceHistoryEntity();
-        raceHistory.setHost(user);
-        raceHistory.setTargetScore(300);
+    // http://localhost:8085/api/auth/register
+    @PostMapping("/register")
+    public void register(@RequestBody RegisterRequest request) {
+        System.out.println("--- Register Request Received ---");
+        System.out.println("Username: " + request.getUsername());
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Password: " + request.getPassword());
+    }
 
-        RaceParticipantHistoryEntity raceParticipantHistory = new RaceParticipantHistoryEntity();
-        raceParticipantHistory.setRace(raceHistory);
-        raceParticipantHistory.setFinalScore(89);
-        raceParticipantHistory.setNickname("Ani");
-        raceParticipantHistory.setUser(user);
+    // http://localhost:8085/api/auth/forgot-password
+    @PostMapping("/forgot-password")
+    public void forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        System.out.println("--- Forgot Password Request Received ---");
+        System.out.println("Email to reset: " + request.getEmail());
+    }
 
-        baseRepository.save(raceHistory);
-
-        baseRepository.save(raceParticipantHistory);
-
-        System.out.println("הדפסות");
-        System.out.println(baseRepository.loadObject(UserEntity.class, 1));
-        System.out.println(baseRepository.loadObject(TokenEntity.class, 1));
-        System.out.println(baseRepository.loadObject(RaceHistoryEntity.class, 1));
-        System.out.println(baseRepository.loadObject(RaceParticipantHistoryEntity.class, 1));
-        return "השרת של Math Race עובד! הבקשה הגיעה אליי.";
+    // http://localhost:8085/api/auth/change-password
+    @PostMapping("/change-password")
+    public void changePassword(@RequestBody ChangePasswordRequest request) {
+        System.out.println("--- Change Password Request Received ---");
+        System.out.println("New Password: " + request.getNewPassword());
     }
 }
