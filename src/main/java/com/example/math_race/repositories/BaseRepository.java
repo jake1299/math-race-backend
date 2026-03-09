@@ -1,7 +1,6 @@
 package com.example.math_race.repositories;
 
 import com.example.math_race.entities.BaseEntity;
-import com.example.math_race.entities.UserEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +20,7 @@ public class BaseRepository {
     public BaseRepository(SessionFactory sf) {
         this.sessionFactory = sf;
     }
+
 
     public void save(Object object) {
         this.sessionFactory.getCurrentSession().saveOrUpdate(object);

@@ -4,7 +4,9 @@ import com.example.math_race.dto.request.ChangePasswordRequest;
 import com.example.math_race.dto.request.ForgotPasswordRequest;
 import com.example.math_race.dto.request.LoginRequest;
 import com.example.math_race.dto.request.RegisterRequest;
-import com.example.math_race.repositories.BaseRepository;
+import com.example.math_race.dto.response.ApiResponse;
+import com.example.math_race.dto.response.LoginResponse;
+import com.example.math_race.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,14 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class LoginController {
 
     @Autowired
-    private BaseRepository baseRepository;
+    private AuthService authService;
 
     // http://localhost:8085/api/auth/login
     @PostMapping("/login")
-    public void login(@RequestBody LoginRequest request) {
-        System.out.println("--- Login Request Received ---");
-        System.out.println("Email: " + request.getEmail());
-        System.out.println("Password: " + request.getPassword());
+    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+        if (request.getEmail() == null || request.getEmail().isEmpty()
+                || request.getPassword() == null || request.getPassword().isEmpty()) {
+
+        }
+
+        LoginResponse response = authService.loginUser(request);
+        return ApiResponse.success(null);
     }
 
     // http://localhost:8085/api/auth/register
