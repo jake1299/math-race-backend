@@ -26,7 +26,7 @@ public class LoginController {
         }
 
         LoginResponse response = authService.loginUser(request);
-        return ApiResponse.success(null);
+        return ApiResponse.success(response);
     }
 
     // http://localhost:8085/api/auth/register

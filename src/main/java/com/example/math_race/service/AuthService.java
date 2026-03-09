@@ -22,7 +22,7 @@ public class AuthService {
             throw new LogicException(ErrorCode.AUTH_FAILED);
         }
 
-        if (user.getPassword().equals(request.getPassword())) {
+        if (!user.getPassword().equals(request.getPassword())) {
             throw new LogicException(ErrorCode.AUTH_FAILED);
         }
 

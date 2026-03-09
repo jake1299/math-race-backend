@@ -15,12 +15,12 @@ public class ApiResponse<T> {
     private String message;
     private T data;
 
-    public static <T> ApiResponse<T> ok(T data, String msg) {
+    public static <T> ApiResponse<T> success(T data, String msg) {
         return new ApiResponse<>(true, null, msg , data);
     }
 
-    public static <T> ApiResponse<T> ok(T data) {
-        return ok(data, "Operation completed successfully!");
+    public static <T> ApiResponse<T> success(T data) {
+        return success(data, "Operation completed successfully!");
     }
 
     public static <T> ApiResponse<T> error(int code, String msg) {
