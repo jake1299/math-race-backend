@@ -2,7 +2,7 @@ package com.example.math_race.config.websocket.Interceptors;
 
 import com.example.math_race.config.websocket.WebSocketSessionRegistry;
 import com.example.math_race.dto.wsMessage.WsMessage;
-import com.example.math_race.dto.wsMessage.response.PlayerConnectionDTO;
+import com.example.math_race.dto.wsMessage.response.AccountConnectionDTO;
 import com.example.math_race.entities.UserEntity;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.race.RaceAccount;
@@ -96,31 +96,31 @@ public class UserInterceptor implements ChannelInterceptor {
         accessor.getSessionAttributes().put("sub_path_" + subId, destination);
 
         if(destination.contains("/race")) {
-            RaceManager raceManager = raceService.findOpenRaceByAccountId(principal.getName());
-            if (raceManager == null) {
+            RaceManager race = raceService.findOpenRaceByAccountId(principal.getName());
+            if (race == null) {
                 webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.USER_NOT_IN_ANY_RACE,accessor);
                 return null;
             }
 
             if (destination.contains("/topic/race/")) {
                 Map<String, String> vars = matcher.extractUriTemplateVariables("/topic/race/{roomCode}/updates", destination);
-                if (!raceManager.isRoomCode(vars.get("roomCode"))) {
+                if (!race.isRoomCode(vars.get("roomCode"))) {
                     webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_REGISTERED_FOR_RACE,accessor);
                     return null;
                 }
             } else if (destination.startsWith("/user/queue/race/feedback")) {
-                if (raceManager.isHost(principal.getName())) {
+                if (race.isHost(principal.getName())) {
                     webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.HOST_FORBIDDEN_PLAYER_ACTION,accessor);
                     return null;
                 }
             } else if (destination.startsWith("/user/queue/race/host")) {
-                if (!raceManager.isHost(principal.getName())) {
+                if (!race.isHost(principal.getName())) {
                     webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_RACE_HOST,accessor);
                     return null;
                 }
             }
 
-            RaceAccount account = raceManager.getAccount(principal.getName());
+            RaceAccount account = race.getAccount(principal.getName());
             String incomingToken = accessor.getFirstNativeHeader("Join-Token");
 
             if (!account.isConnected() || account.getSessionActive().equals(accessor.getSessionId()) ||
@@ -135,10 +135,18 @@ public class UserInterceptor implements ChannelInterceptor {
                 }
 
                 account.setSessionActive(accessor.getSessionId());
-                if (!destination.startsWith("/user/queue/race/host")) {
-                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"PLAYER_CONNECTION",
-                            new PlayerConnectionDTO(principal.getName(), true), raceManager.getHost().getId(), raceManager.getHost().getSessionActive());
+                boolean hostConnected = race.isHost(principal.getName());
+
+                webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                        hostConnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
+                        new AccountConnectionDTO(account));
+
+                if (!hostConnected) {
+                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
                 }
+
+
             } else {
                 webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.DUPLICATE_RACE_CONNECTION,accessor);
                 return null;
@@ -227,16 +235,22 @@ public class UserInterceptor implements ChannelInterceptor {
         if (principal != null && sessionId != null) {
             webSocketService.removeSession(principal.getName(), sessionId);
 
-            RaceManager raceManager = raceService.findOpenRaceByAccountId(principal.getName());
-            if (raceManager == null) return;
-            RaceAccount account = raceManager.getAccount(principal.getName());
+            RaceManager race = raceService.findOpenRaceByAccountId(principal.getName());
+            if (race == null) return;
+            RaceAccount account = race.getAccount(principal.getName());
 
             if (account != null && sessionId.equals(account.getSessionActive())) {
-                if (!raceManager.isHost(account.getId())) {
-                    webSocketService.sendToQueueSession(QUEUE_RACE_HOST, WsMessage.success("PLAYER_CONNECTION",
-                            new PlayerConnectionDTO(principal.getName(), false)), raceManager.getHost().getId(), raceManager.getHost().getSessionActive());
-                }
+                boolean hostDisconnected =  race.isHost(account.getId());
                 account.setSessionActive(null);
+
+                webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                        hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
+                        new AccountConnectionDTO(account));
+
+                if (!hostDisconnected) {
+                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+                }
             }
         }
     }
@@ -251,17 +265,22 @@ public class UserInterceptor implements ChannelInterceptor {
 
         if (principal != null && sessionId != null) {
 
-            RaceManager raceManager = raceService.findOpenRaceByAccountId(principal.getName());
-            if (raceManager == null) return;
-            RaceAccount account =  raceManager.getAccount(principal.getName());
+            RaceManager race = raceService.findOpenRaceByAccountId(principal.getName());
+            if (race == null) return;
+            RaceAccount account =  race.getAccount(principal.getName());
 
-            if (account != null && sessionId.equals(account.getSessionActive())) {
-
-                if (!raceManager.isHost(account.getId())) {
-                    webSocketService.sendToQueueSession(QUEUE_RACE_HOST, WsMessage.success("PLAYER_CONNECTION",
-                            new PlayerConnectionDTO(principal.getName(), false)), raceManager.getHost().getId(), raceManager.getHost().getSessionActive());
-                }
+            if (account != null && sessionId.equals(account.getSessionActive()) && destination.contains("/race/")) {
+                boolean hostDisconnected =  race.isHost(account.getId());
                 account.setSessionActive(null);
+
+                webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                        hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
+                        new AccountConnectionDTO(account));
+
+                if (!hostDisconnected) {
+                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+                }
             }
         }
     }

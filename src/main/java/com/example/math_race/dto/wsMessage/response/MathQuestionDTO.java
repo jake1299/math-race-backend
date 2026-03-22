@@ -1,0 +1,30 @@
+package com.example.math_race.dto.wsMessage.response;
+
+import com.example.math_race.race.RaceManager;
+import com.example.math_race.race.RacePlayer;
+import com.example.math_race.race.questions.MathQuestion;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class MathQuestionDTO {
+
+    private String expression;
+    private List<String> options;
+    private long timeLimitMillis;
+    private long questionRemainingTimeMillis;
+    private int score;
+
+    public MathQuestionDTO(RaceManager race, RacePlayer player, MathQuestion mathQuestion) {
+        this.expression = mathQuestion.getExpression();
+        this.options = mathQuestion.getOptions();
+        this.timeLimitMillis = mathQuestion.getTimeLimitMillis();
+        this.score = mathQuestion.getScore();
+        this.questionRemainingTimeMillis = player.getCalculatedQuestionRemainingTime(race.getStatus());
+    }
+}

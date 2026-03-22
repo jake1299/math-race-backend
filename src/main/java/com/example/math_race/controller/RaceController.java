@@ -5,8 +5,10 @@ import com.example.math_race.dto.response.ApiResponse;
 import com.example.math_race.dto.response.CreateRaceResponse;
 import com.example.math_race.dto.response.JoinRaceResponse;
 import com.example.math_race.dto.response.RaceInfoResponse;
+import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.service.RaceService;
+import com.example.math_race.service.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -27,73 +29,23 @@ import java.security.Principal;
 @RequestMapping("/api/race")
 public class RaceController {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final RaceService raceService;
+    private final WebSocketService webSocketService;
 
     @Autowired
-    public  RaceController(RaceService raceService, SimpMessagingTemplate messagingTemplate) {
+    public  RaceController(RaceService raceService,  WebSocketService webSocketService) {
         this.raceService = raceService;
-        this.messagingTemplate = messagingTemplate;
+        this.webSocketService = webSocketService;
     }
 
-
-    @MessageMapping("/race/{roomCode}/join9")
-    public void handleJoin(@DestinationVariable String roomCode, @Payload Object request,
-                           Principal principal,
-                           SimpMessageHeaderAccessor headerAccessor) {
-
-        // 1. חילוץ המזהים
-        String userId = principal.getName(); // ה-ID של החשבון
-        String sessionId = headerAccessor.getSessionId(); // ה-ID של המכשיר הספציפי
-
-        System.out.println("User " + userId + " joined from session " + sessionId);
-
-        // --- כאן תבוא הלוגיקה של הוספת השחקן לחדר ב-DB או בזיכרון ---
-
-        // 2. יצירת Headers שמכוונים רק למכשיר הזה
-        SimpMessageHeaderAccessor responseHeaders = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-        responseHeaders.setSessionId(sessionId);
-        responseHeaders.setLeaveMutable(true);
-
-        // 3. שליחת הודעת אישור רק למכשיר שביצע את ה-Join
-        messagingTemplate.convertAndSendToUser(
-                userId,
-                "/queue/race-updates",
-                "נכנסת למרוץ בהצלחה!",
-                responseHeaders.getMessageHeaders()
-        );
-    }
-
-    @MessageMapping("/race/{roomCode}/submit")
-    @SendToUser("/queue/game-events") // גם זה חוזר לאותו צינור
-    public void handleSubmit(@DestinationVariable String roomCode, @Payload Object answer, Principal principal) {
-
-        // לוגיקה לבדיקת תשובה...
-        boolean isCorrect = true;
-
-        if (isCorrect) {
-            // 2. שידור לכל מי שנמצא בחדר (כולל המורה והתלמידים האחרים)
-            // כולם מאזינים לכתובת הזו ב-React
-            String roomDestination = "/topic/race/" + roomCode;
-
-            // יצירת אובייקט עדכון (למשל: "שמעון התקדם למיקום 50")
-            Object broadcastEvent = null; //new GameEvent("PLAYER_MOVED", answer.getPlayerId() + " moved forward!");
-
-            // השורה ששולחת לכולם:
-            messagingTemplate.convertAndSend(roomDestination, broadcastEvent);
-
-            // השרת שולח לערוץ משתמש פרטי
-            messagingTemplate.convertAndSendToUser(
-                    principal.getName(),
-                    "/queue/game-events",
-                    answer
-            );
+    @MessageMapping("/race/{roomCode}/player/submit")
+    public void handleSubmit(@DestinationVariable String roomCode, @Payload SubmitQuestionRequest request , StompHeaderAccessor accessor) {
+        if (request == null || request.getAnswer() == null || request.getAnswer().isEmpty()) {
+            webSocketService.sendErrorToQueueSession(WebSocketService.QUEUE_RACE_FEEDBACK,ErrorCode.INVALID_INPUT,accessor);
         }
 
-        // מחזירים אירוע מסוג תוצאת תשובה
-        // return new Object("ANSWER_RESULT", isCorrect ? "צדקת!" : "טעית...");
+        raceService.handleSubmitQuestion(roomCode,request, accessor);
     }
-
 
     @MessageMapping("/race/{roomCode}/host/start")
     public void handleChangeRaceStatus(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {

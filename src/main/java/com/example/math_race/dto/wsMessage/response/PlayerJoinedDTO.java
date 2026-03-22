@@ -1,5 +1,6 @@
 package com.example.math_race.dto.wsMessage.response;
 
+import com.example.math_race.race.RaceManager;
 import com.example.math_race.race.RacePlayer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +13,7 @@ public class PlayerJoinedDTO {
 
     private PlayerProgressDTO player;
 
-    public PlayerJoinedDTO(RacePlayer racePlayer, boolean showScore){
-        this.player = new PlayerProgressDTO(racePlayer,showScore);
+    public PlayerJoinedDTO(RaceManager race,RacePlayer player, boolean showScore){
+        this.player = new PlayerProgressDTO(race,player,showScore);
     }
 }

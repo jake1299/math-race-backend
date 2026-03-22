@@ -25,6 +25,7 @@ public class RacePlayer extends RaceAccount{
     }
 
     public void addScore(int score){
+
         this.currentScore += score;
     }
 

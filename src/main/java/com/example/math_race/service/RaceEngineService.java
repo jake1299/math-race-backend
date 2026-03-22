@@ -1,8 +1,9 @@
 package com.example.math_race.service;
 
-import com.example.math_race.dto.wsMessage.response.NewQuestionDTO;
 import com.example.math_race.dto.wsMessage.response.AnswerScoreDTO;
+import com.example.math_race.dto.wsMessage.response.MathQuestionDTO;
 import com.example.math_race.dto.wsMessage.response.RaceResultsDTO;
+import com.example.math_race.dto.wsMessage.response.StatusChangedDTO;
 import com.example.math_race.race.RaceManager;
 import com.example.math_race.race.RacePlayer;
 import com.example.math_race.race.RaceStatus;
@@ -54,11 +55,11 @@ public class RaceEngineService {
 
         raceEndTimers.put(race.getId(), endTask);
 
-        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
-                "RACE_START", null);
-
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_START", null,
+        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
+        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_START", statusChangedDTO,
                 race.getHost().getId(), race.getHost().getSessionActive());
+        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                "RACE_START", statusChangedDTO);
 
 
         for (RacePlayer player : race.getPlayers().values()) {
@@ -69,13 +70,18 @@ public class RaceEngineService {
     public void sendNextQuestionToPlayer(RaceManager race,RacePlayer player) {
         if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
 
+        ScheduledFuture<?> existingTimer = playerQuestionTimers.remove(player.getId());
+        if (existingTimer != null) {
+            existingTimer.cancel(false);
+        }
+
         MathQuestion question = mathQuestionGenerator.generateForPlayer(player);
         player.setCurrentQuestion(question);
 
         player.setQuestionStartTimeMillis(System.currentTimeMillis());
         player.setQuestionRemainingTimeMillis(question.getTimeLimitMillis());
 
-        NewQuestionDTO questionDTO = new NewQuestionDTO(question, player);
+        MathQuestionDTO questionDTO = new MathQuestionDTO(race,player,question);
         webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK,"NEW_QUESTION",questionDTO,
                 player.getId(), player.getSessionActive());
 
@@ -91,48 +97,66 @@ public class RaceEngineService {
 
     public void processPlayerAnswer(RaceManager race, RacePlayer player, String answer) {
         if (!race.getStatus().isRunning()) return;
-        ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
-        if (timer != null) {
-            timer.cancel(false);
-        }
 
-        boolean isCorrect = player.checkAnswer(answer);
-        int addScore;
-        if (isCorrect) {
-            addScore = player.getCurrentQuestion().getScore();
-            player.addScore(addScore);
-        }else {
-            addScore = (int) (player.getCurrentQuestion().getScore()*0.2);
-            player.addScore(addScore);
+        synchronized (player) {
+            if (player.getCurrentQuestion() == null) {
+                return;
+            }
 
-        }
+            ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
+            if (timer != null) {
+                timer.cancel(false);
+            }
 
-        AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(addScore, player.getId());
+            boolean isCorrect = player.checkAnswer(answer);
+            int addScore;
+            if (isCorrect) {
+                addScore = player.getCurrentQuestion().getScore();
+                player.addScore(addScore);
+            } else {
+                addScore = -(int) (player.getCurrentQuestion().getScore() * 0.2);
+                if (player.getCurrentScore() + addScore < 0)
+                    addScore = 0;
+                player.addScore(addScore);
 
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, isCorrect ? "CORRECT_ANSWER" : "WRONG_ANSWER", answerScoreDTO,
-                player.getId(),player.getSessionActive());
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, isCorrect ? "PLAYER_ANSWERED_CORRECTLY" : "PLAYER_ANSWERED_INCORRECTLY", answerScoreDTO,
-                race.getHost().getId(),race.getHost().getSessionActive());
+            }
 
-        if (player.getCurrentScore() >= race.getSettings().getTargetScore()){
-            finishRace(race);
-        } else {
-            sendNextQuestionToPlayer(race, player);
+            AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(addScore, player.getId());
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, isCorrect ? "CORRECT_ANSWER" : "WRONG_ANSWER", answerScoreDTO,
+                    player.getId(), player.getSessionActive());
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, isCorrect ? "PLAYER_ANSWERED_CORRECTLY" : "PLAYER_ANSWERED_INCORRECTLY", answerScoreDTO,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+
+            if (player.getCurrentScore() >= race.getSettings().getTargetScore()) {
+                finishRace(race);
+            } else {
+                sendNextQuestionToPlayer(race, player);
+            }
+
         }
     }
 
     private void handleQuestionTimeout(RaceManager race, RacePlayer player) {
         if (!race.getStatus().isRunning()) return;
-        playerQuestionTimers.remove(player.getId());
 
-        AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(0,player.getId());
+        synchronized (player) {
+            if (player.getCurrentQuestion() == null) {
+                return;
+            }
 
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "TIMEOUT", answerScoreDTO,
-                player.getId(),player.getSessionActive());
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_TIMEOUT",answerScoreDTO,
-                race.getHost().getId(),race.getHost().getSessionActive());
+            playerQuestionTimers.remove(player.getId());
+            player.setCurrentQuestion(null);
 
-        sendNextQuestionToPlayer(race, player);
+            AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(0, player.getId());
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "TIMEOUT", answerScoreDTO,
+                    player.getId(), player.getSessionActive());
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_TIMEOUT", answerScoreDTO,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+
+            sendNextQuestionToPlayer(race, player);
+        }
     }
 
     private void resumeCurrentQuestionForPlayer(RaceManager race, RacePlayer player) {
@@ -154,16 +178,8 @@ public class RaceEngineService {
 
     public void pauseRace(RaceManager race) {
         if (race == null || !race.getStatus().isRunning()) return;
-        race.setStatus(RaceStatus.PAUSED);
 
         long currentRemainingTime = race.getCalculatedRemainingTime();
-        race.setRemainingTimeMillis(currentRemainingTime);
-        race.setLastResumedAtMillis(0);
-
-        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId());
-        if (endTask != null) {
-            endTask.cancel(false);
-        }
 
         for (RacePlayer player : race.getPlayers().values()) {
             ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
@@ -175,8 +191,20 @@ public class RaceEngineService {
             }
         }
 
-        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_PAUSED", null);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_PAUSED", null, race.getHost().getId(), race.getHost().getSessionActive());
+        race.setStatus(RaceStatus.PAUSED);
+        race.setRemainingTimeMillis(currentRemainingTime);
+        race.setLastResumedAtMillis(0);
+
+        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId());
+        if (endTask != null) {
+            endTask.cancel(false);
+        }
+
+        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(RaceStatus.PAUSED);
+
+        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_PAUSED", statusChangedDTO);
+        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_PAUSED", statusChangedDTO,
+                race.getHost().getId(), race.getHost().getSessionActive());
     }
 
     public void resumeRace(RaceManager race) {
@@ -189,8 +217,10 @@ public class RaceEngineService {
         ScheduledFuture<?> endTask = scheduler.schedule(() -> finishRace(race), Date.from(endTime));
         raceEndTimers.put(race.getId(), endTask);
 
-        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_RESUMED", null);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_RESUMED", null,
+        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
+
+        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_RESUMED", statusChangedDTO);
+        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_RESUMED", statusChangedDTO,
                 race.getHost().getId(), race.getHost().getSessionActive());
 
         for (RacePlayer player : race.getPlayers().values()) {
@@ -200,6 +230,7 @@ public class RaceEngineService {
 
     private void finishRace(RaceManager race) {
         if (!race.getStatus().isRunning()) return;
+        // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
 
         race.setStatus(RaceStatus.FINISHED);
         race.setEndedAtMillis(System.currentTimeMillis());
@@ -218,6 +249,8 @@ public class RaceEngineService {
     public void cancelledRace(RaceManager race) {
         if (race.getStatus().isClosed()) return;
 
+        // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
+
         race.setStatus(RaceStatus.CANCELLED);
         race.setEndedAtMillis(System.currentTimeMillis());
 
@@ -227,8 +260,10 @@ public class RaceEngineService {
         }
         clearAllPlayerTimersForRoom(race);
 
-        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),"RACE_CANCELLED",null);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",null,
+        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.CANCELLED);
+
+        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),"RACE_CANCELLED",statusChangedDTO);
+        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",statusChangedDTO,
                 race.getHost().getId(),race.getHost().getSessionActive());
 
     }

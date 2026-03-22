@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class RaceInfoResponse {
     private boolean isHost;
     private String nickname;
+    private String accountId;
     private RaceStatus status;
     private String name;
     private String roomCode;
@@ -25,5 +26,6 @@ public class RaceInfoResponse {
         this.name = raceManager.getSettings().getRaceName();
         this.roomCode = raceManager.getRoomCode();
         this.targetScore = raceManager.getSettings().getTargetScore();
+        this.accountId = account.getId();
     }
 }

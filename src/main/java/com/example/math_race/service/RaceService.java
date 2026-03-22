@@ -1,6 +1,6 @@
 package com.example.math_race.service;
 
-import com.example.math_race.dto.wsMessage.WsMessage;
+import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.dto.wsMessage.response.PlayerJoinedDTO;
 import com.example.math_race.dto.wsMessage.response.RaceStateDTO;
 import com.example.math_race.dto.request.*;
@@ -159,6 +159,14 @@ public class RaceService {
                 raceManager.getRoomCode(),isHost ? "HOST" : "PLAYER",raceManager.getSettings().getTargetScore());
     }
 
+
+    public void handleSubmitQuestion(String roomCode, SubmitQuestionRequest request, StompHeaderAccessor accessor){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (race.getStatus().isRunning()){
+            raceEngineService.processPlayerAnswer(race,race.getPlayer(accessor.getUser().getName()),request.getAnswer());
+        }
+    }
+
     public void handleStartRace(String roomCode, StompHeaderAccessor accessor){
         RaceManager raceManager = findOpenRaceByRoomCode(roomCode);
         if (!raceManager.getStatus().equals(RaceStatus.PENDING)){
@@ -176,14 +184,18 @@ public class RaceService {
         RaceManager raceManager = findRaceByRoomCode(roomCode);
         boolean isHost = raceManager.isHost(accessor.getUser().getName());
 
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_FULL_STATE",
-                new RaceStateDTO(raceManager, isHost || raceManager.getStatus().equals(RaceStatus.FINISHED)),accessor);
+
+        webSocketService.sendSuccessToQueueSession(isHost ? QUEUE_RACE_HOST : QUEUE_RACE_FEEDBACK, "RACE_FULL_STATE",
+                new RaceStateDTO(raceManager, raceManager.getAccount(accessor.getUser().getName())),accessor);
     }
 
-    public void sendPlayerJoined(RaceManager raceManager, String accountId){
-        webSocketService.sendToQueueSession(QUEUE_RACE_HOST,
-                WsMessage.success("PLAYER_JOINED",new PlayerJoinedDTO(raceManager.getPlayer(accountId),true)),
-                raceManager.getHost().getId(),raceManager.getHost().getSessionActive());
+    public void sendPlayerJoined(RaceManager race, String accountId){
+        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,
+               "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),true),
+                race.getHost().getId(),race.getHost().getSessionActive());
+
+        webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),false));
     }
 
     public RaceAccount findAccountByIdInOpenRace(String accountId) {
