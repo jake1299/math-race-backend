@@ -20,6 +20,17 @@ public class NumberEntity implements QuestionEntity {
             int bonus = Integer.parseInt(key.replace("add_", ""));
             return String.valueOf(value + bonus);
         }
+
+        if (key.startsWith("sub_")) {
+            int bonus = Integer.parseInt(key.replace("sub_", ""));
+            return String.valueOf(value - bonus);
+        }
+
+        if (key.startsWith("div_")) {
+            int bonus = Integer.parseInt(key.replace("div_", ""));
+            return String.valueOf(value / bonus);
+        }
+
         return String.valueOf(value);
     }
 

@@ -26,7 +26,6 @@ public class TagInfo {
 
     public static TagInfo parse(String tag) {
         String clean = tag.substring(1, tag.length() - 1);
-
         List<String> parts = smartSplit(clean, ':');
 
         String type = parts.get(0);
@@ -34,28 +33,30 @@ public class TagInfo {
         String property = "";
         String id = "";
 
-        // טיפול במגבלות (Constraints)
-        if (parts.size() > 1 && !type.startsWith("#")) {
-            // גם כאן נשתמש ב-smartSplit עבור הנקודה פסיק, למקרה שבעתיד יהיה שם משהו מורכב
-            List<String> pairs = smartSplit(parts.get(1), ';');
-            for (String pair : pairs) {
-                List<String> kv = smartSplit(pair, '=');
-                if (kv.size() == 2) constraints.put(kv.get(0), kv.get(1));
-            }
+        if (type.startsWith("#")) {
+            id = type;
+            if (parts.size() > 1) property = parts.get(1);
+            return new TagInfo(type, constraints, property, id);
         }
 
-        // זיהוי ID ו-Property (בין אם זו הגדרה או הפניה)
-        if (type.startsWith("#")) {
-            // הפניה כמו [#X:(#Y:p)]
-            id = type;
-            if (parts.size() > 1) property = parts.get(1); // כאן ה-Property יכול להיות "(#Y:p)"
-        } else {
-            // הגדרה כמו [ITEM:type=food:s:#1]
-            if (parts.size() == 4) {
-                property = parts.get(2);
-                id = parts.get(3);
-            } else if (parts.size() == 3) {
-                id = parts.get(2);
+        int lastIdx = parts.size() - 1;
+
+        if (lastIdx >= 1 && parts.get(lastIdx).startsWith("#")) {
+            id = parts.get(lastIdx);
+            lastIdx--;
+        }
+
+        if (lastIdx >= 1 && !parts.get(lastIdx).contains("=")) {
+            property = parts.get(lastIdx);
+            lastIdx--;
+        }
+
+        if (lastIdx >= 1) {
+            String constraintsPart = parts.get(1);
+            List<String> pairs = smartSplit(constraintsPart, ';');
+            for (String pair : pairs) {
+                List<String> kv = smartSplit(pair, '=');
+                if (kv.size() == 2) constraints.put(kv.get(0).trim(), kv.get(1).trim());
             }
         }
 

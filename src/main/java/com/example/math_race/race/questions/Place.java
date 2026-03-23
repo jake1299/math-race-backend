@@ -10,18 +10,21 @@ import java.util.Map;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class Item implements QuestionEntity {
+@NoArgsConstructor
+public class Place implements QuestionEntity{
     private String singular;
     private String plural;
     private Gender gender;
+    private PlaceType placeType;
     private Set<ItemCategory> categories;
 
-    public Item(String singular, String plural, Gender gender, ItemCategory... categories) {
+
+    public Place(String singular, String plural, Gender gender, PlaceType placeType, ItemCategory... categories) {
         this.singular = singular;
         this.plural = plural;
         this.gender = gender;
+        this.placeType = placeType;
         this.categories = new HashSet<>(Arrays.asList(categories));
     }
 
@@ -29,13 +32,55 @@ public class Item implements QuestionEntity {
     public String getProperty(String key) {
         if ("s".equals(key)) return singular;
         if ("p".equals(key)) return plural;
-        if ("g".equals(key)) return gender.name();
+        if ("g".equals(key)) return gender.toString();
+
+        if ("pt".equals(key) || "place_type".equals(key)) return placeType.name();
+
+        if ("he_she".equals(key)) {
+            return gender == Gender.MALE ? "הוא" : "היא";
+        }
+        if ("his_hers".equals(key)) {
+            return gender == Gender.MALE ? "שלו" : "שלה";
+        }
+        if ("to_him_her".equals(key)) {
+            return gender == Gender.MALE ? "לו" : "לה";
+        }
+
+        if ("in_it".equals(key)) {
+            return gender == Gender.MALE ? "בו" : "בה";
+        }
+        if ("to_it".equals(key)) {
+            return gender == Gender.MALE ? "אליו" : "אליה";
+        }
+        if ("from_it".equals(key)) {
+            return gender == Gender.MALE ? "ממנו" : "ממנה";
+        }
+
         return singular;
     }
 
     public boolean matches(Map<String, String> constraints) {
 
+        if (constraints.containsKey("place_type") && !constraints.get("place_type").equals("?")) {
+            String req = constraints.get("place_type").trim().toUpperCase();
+            boolean isNot = req.startsWith("!");
+            if (isNot) req = req.substring(1);
+
+            // ב-PlaceType בדרך כלל יש רק ערך אחד למקום, אז נתמוך ב-OR (|) בלבד
+            String[] allowedTypes = req.split("\\|");
+            boolean foundMatch = false;
+            for (String t : allowedTypes) {
+                if (this.placeType.name().equals(t.trim())) {
+                    foundMatch = true;
+                    break;
+                }
+            }
+
+            if (isNot == foundMatch) return false;
+        }
+
         if (constraints.containsKey("type") && !constraints.get("type").equals("?")) {
+
             String rawExpr = constraints.get("type").trim().toUpperCase();
             boolean isNegated = rawExpr.startsWith("!");
 
@@ -43,11 +88,11 @@ public class Item implements QuestionEntity {
                 rawExpr = rawExpr.substring(1);
             }
 
+
             String[] orGroups = rawExpr.split("\\|");
-            boolean expressionMatch = false;
+            boolean expressionResult = false;
 
             for (String group : orGroups) {
-
                 String[] andRequirements = group.split("&");
                 boolean allInGroupMatch = true;
 
@@ -65,52 +110,15 @@ public class Item implements QuestionEntity {
                 }
 
                 if (allInGroupMatch) {
-                    expressionMatch = true;
+                    expressionResult = true;
                     break;
                 }
             }
 
-            if (isNegated) {
-                if (expressionMatch) return false;
-            } else {
-                if (!expressionMatch) return false;
-            }
-        }
-
-
-        if (constraints.containsKey("s") && !constraints.get("s").equals("?")) {
-            String reqS = constraints.get("s").trim();
-            if (reqS.startsWith("!")) {
-                if (this.singular.equalsIgnoreCase(reqS.substring(1))) return false;
-            } else {
-                if (!this.singular.equalsIgnoreCase(reqS)) return false;
-            }
-        }
-
-        if (constraints.containsKey("p") && !constraints.get("p").equals("?")) {
-            String reqP = constraints.get("p").trim();
-            if (reqP.startsWith("!")) {
-                if (this.plural.equalsIgnoreCase(reqP.substring(1))) return false;
-            } else {
-                if (!this.plural.equalsIgnoreCase(reqP)) return false;
-            }
-        }
-
-        if (constraints.containsKey("g") && !constraints.get("g").equals("?")) {
-            String reqGender = constraints.get("g").trim().toLowerCase();
-            boolean isNot = reqGender.startsWith("!");
-            String genderVal = isNot ? reqGender.substring(1) : reqGender;
-
-            boolean isMaleMatch = (genderVal.equals("m") || genderVal.equals("male")) && this.gender == Gender.MALE;
-            boolean isFemaleMatch = (genderVal.equals("f") || genderVal.equals("female")) && this.gender == Gender.FEMALE;
-
-            if (isNot) {
-                if (isMaleMatch || isFemaleMatch) return false;
-            } else {
-                if (!isMaleMatch && !isFemaleMatch) return false;
-            }
+            return isNegated != expressionResult;
         }
 
         return true;
     }
+
 }

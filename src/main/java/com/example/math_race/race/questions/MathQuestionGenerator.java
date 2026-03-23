@@ -4,6 +4,9 @@ import com.example.math_race.race.RacePlayer;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static com.example.math_race.race.questions.ItemCategory.*;
 
 @Component
 public class MathQuestionGenerator {
@@ -11,28 +14,35 @@ public class MathQuestionGenerator {
 
     static ArrayList<Human> humans =  new ArrayList<>();
     static ArrayList<Item> items =  new ArrayList<>();
+    static ArrayList<Verb> verbs = new ArrayList<>();
+    static ArrayList<Place> places = new ArrayList<>();
     static {
         fillHumans();
+        fillVerbs();
+        fillItems();
+        fillPlaces();
     }
 
 
-    String template = "[HUMAN:g=?:#1] [#1]";
+    String template = "[HUMAN:g=?:#1] [VERB:id=buy;g=(#1:g);t=past;num=s:#2] [NUM:min=2;max=10:mul_3:#3] [ITEM:type=FOOD:p:#4]";
+// זה יכול להדפיס: "Noa קנתה 5 apples" או "Shimon קנה 3 bananas"
 
     String t = "[ITEM:param=m;param=?:take:name]";
 
 
 
-    public String gene(String template) {
+    public static String gene(String template, Map<String, QuestionEntity> memory) {
         Set<String> tags = extractUniqueTags(template);
-        Map<String, QuestionEntity> memory = new HashMap<>();
+        if (memory == null) {
+            memory = new HashMap<>();
+        }
         String result = template;
 
         for (String tag : tags) {
-            if (tag.contains(":") && !tag.startsWith("[#")) {
-                TagInfo info = TagInfo.parse(tag);
+            TagInfo info = TagInfo.parse(tag);
+            if (!tag.startsWith("[#")) {
                 Map<String, String> resolvedConstraints = new HashMap<>();
 
-                // פתרון סוגריים בתוך הפרמטרים
                 for (Map.Entry<String, String> entry : info.getConstraints().entrySet()) {
                     resolvedConstraints.put(entry.getKey(), resolveValue(entry.getValue(), memory));
                 }
@@ -41,30 +51,37 @@ public class MathQuestionGenerator {
                 if ("HUMAN".equals(info.getType())) chosen = findHuman(resolvedConstraints);
                 else if ("ITEM".equals(info.getType())) chosen = findItem(resolvedConstraints);
                 else if ("NUM".equals(info.getType())) chosen = findNumber(resolvedConstraints);
+                else if ("VERB".equals(info.getType())) chosen = findVerb(resolvedConstraints);
+                else if ("PLACE".equals(info.getType())) chosen = findPlace(resolvedConstraints);
 
                 if (chosen != null) {
                     memory.put(info.getId(), chosen);
 
-                    String resolvedProp = resolveValue(info.getProperty(), memory);
-                    result = result.replace(tag, chosen.getProperty(resolvedProp));
-                }
-            }else if (tag.startsWith("[#")) {
-                if (tag.startsWith("[#")) {
-                    TagInfo info = TagInfo.parse(tag);
-                    if (memory.containsKey(info.getId())) {
-                        QuestionEntity entity = memory.get(info.getId());
+                    String property = info.getProperty();
+                    String newProperty = splitBeforeAndWithinParentheses(property);
+                    String[] splitNewProperty;
 
-                        String resolvedProp = resolveValue(info.getProperty(), memory);
-                        result = result.replace(tag, entity.getProperty(resolvedProp));
+                    if (newProperty != null) {
+                        splitNewProperty = newProperty.split(":",2);
+                        property = splitNewProperty[0] + resolveValue(splitNewProperty[1], memory);
                     }
-                }
 
+                    String resolvedProp = resolveValue(property, memory);
+                    result = result.replace(tag, !info.getProperty().equals("*") ? chosen.getProperty(resolvedProp) : "");
+                }
+            } else {
+                if (memory.containsKey(info.getId())) {
+                    QuestionEntity entity = memory.get(info.getId());
+
+                    String resolvedProp = resolveValue(info.getProperty(), memory);
+                    result = result.replace(tag, entity.getProperty(resolvedProp));
+                }
             }
         }
         return result;
     }
 
-    public Set<String> extractUniqueTags(String template) {
+    public static Set<String> extractUniqueTags(String template) {
         Set<String> tags = new LinkedHashSet<>();
 
         int indexStart = -1;
@@ -81,27 +98,64 @@ public class MathQuestionGenerator {
         return tags;
     }
 
-    private String resolveValue(String value, Map<String, QuestionEntity> memory) {
-        // אם הערך לא מכיל סוגריים, הוא ערך רגיל (כמו "m" או "fruit")
-        if (!value.startsWith("(") || !value.endsWith(")")) {
+    private static String resolveValue(String value, Map<String, QuestionEntity> memory) {
+        if (value == null || value.isEmpty()) {
             return value;
         }
 
-        // מורידים את הסוגריים: (#1:n) -> #1:n
-        String expression = value.substring(1, value.length() - 1);
-        String[] parts = expression.split(":");
-        String id = parts[0]; // #1
+        boolean isNot = false;
+        String expression = value.trim();
+
+        if (expression.startsWith("!(") && expression.endsWith(")")) {
+            isNot = true;
+            expression = expression.substring(2, expression.length() - 1);
+        } else if (expression.startsWith("(") && expression.endsWith(")")) {
+            expression = expression.substring(1, expression.length() - 1);
+        } else {
+            return value;
+        }
+
+        String[] parts = expression.split(":", 2);
+        String id = parts[0];
         String property = (parts.length > 1) ? parts[1] : "";
 
+
         if (memory.containsKey(id)) {
-            // שולפים מהאובייקט שבזיכרון את המאפיין המבוקש
-            return memory.get(id).getProperty(property);
+            String newProperty = splitBeforeAndWithinParentheses(property);
+            String[] splitNewProperty;
+
+            if (newProperty != null) {
+                splitNewProperty = newProperty.split(":",2);
+                property = splitNewProperty[0] + resolveValue(splitNewProperty[1], memory);
+            }
+
+            String resolvedValue = memory.get(id).getProperty(property);
+            return isNot ? "!" + resolvedValue : resolvedValue;
         }
 
         return value;
     }
 
-    public Human findHuman(Map<String, String> constraints) {
+
+    public static String splitBeforeAndWithinParentheses(String str) {
+        if (str == null || !str.endsWith(")")) {
+            return null;
+        }
+
+        int firstOpen = str.indexOf('(');
+
+        if (firstOpen == -1) {
+            return null;
+        }
+
+        String x = str.substring(0, firstOpen);
+        String y = str.substring(firstOpen);
+
+        return x + ":" + y;
+    }
+
+
+    public static Human findHuman(Map<String, String> constraints) {
         List<Human> matches = humans.stream()
                 .filter(h -> h.matches(constraints))
                 .toList();
@@ -111,10 +165,10 @@ public class MathQuestionGenerator {
             return null;
         }
 
-        return matches.get(new Random().nextInt(matches.size()));
+        return matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
     }
 
-    public Item findItem(Map<String, String> constraints) {
+    public static Item findItem(Map<String, String> constraints) {
         List<Item> matches = items.stream()
                 .filter(h -> h.matches(constraints))
                 .toList();
@@ -124,15 +178,27 @@ public class MathQuestionGenerator {
             return null;
         }
 
-        return matches.get(new Random().nextInt(matches.size()));
+        return matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
     }
 
-    public NumberEntity findNumber(Map<String, String> constraints) {
-        int min, max;
+    public static Place findPlace(Map<String, String> constraints) {
+        List<Place> matches = places.stream()
+                .filter(p -> p.matches(constraints))
+                .toList();
 
+        if (matches.isEmpty()) {
+            System.out.println("Warning: No place matches constraints: " + constraints); // שונה ל-place
+            return null;
+        }
+
+        return matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
+    }
+
+    public static NumberEntity findNumber(Map<String, String> constraints) {
+        int min, max;
         try {
-            min = Integer.parseInt(constraints.getOrDefault("min", "1"));
-            max = Integer.parseInt(constraints.getOrDefault("max", "100"));
+            min = Integer.parseInt(constraints.getOrDefault("min", "1").trim());
+            max = Integer.parseInt(constraints.getOrDefault("max", "100").trim());
 
             if (min > max) {
                 int temp = min;
@@ -144,19 +210,212 @@ public class MathQuestionGenerator {
             max = 100;
         }
 
-        int randomNumber = new Random().nextInt(max - min + 1) + min;
+        if (constraints.containsKey("value") && !constraints.get("value").equals("?")) {
+            String valStr = constraints.get("value").trim();
+
+            if (valStr.startsWith("!")) {
+                try {
+                    int forbiddenValue = Integer.parseInt(valStr.substring(1));
+
+                    if (min == max && min == forbiddenValue) {
+                        return new NumberEntity(min);
+                    }
+
+                    int randomNumber;
+                    do {
+                        randomNumber = java.util.concurrent.ThreadLocalRandom.current().nextInt(min, max + 1);
+                    } while (randomNumber == forbiddenValue);
+
+                    return new NumberEntity(randomNumber);
+                } catch (NumberFormatException e) {
+                }
+            }
+
+            else {
+                try {
+                    return new NumberEntity(Integer.parseInt(valStr));
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        int randomNumber = java.util.concurrent.ThreadLocalRandom.current().nextInt(min, max + 1);
         return new NumberEntity(randomNumber);
     }
 
-    public static void fillHumans(){
-        humans.add(new Human("Shimon",Gender.MALE));
-        humans.add(new Human("Noa",Gender.FEMALE));
+    public static QuestionEntity findVerb(Map<String, String> constraints) {
+        List<Verb> matches = verbs.stream()
+                .filter(v -> v.matches(constraints))
+                .toList();
+
+        if (matches.isEmpty()) {
+            System.out.println("Warning: No verb matches constraints: " + constraints);
+            return null;
+        }
+
+        // בחירת פועל (למקרה שיש כמה, למרות שלרוב יהיה רק אחד עם אותו ID)
+        Verb chosenVerb = matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
+
+        // קריאת האילוצים הדקדוקיים (ברירת מחדל: עבר, זכר, יחיד)
+        String g = constraints.getOrDefault("g", "MALE").toUpperCase();
+        String t = constraints.getOrDefault("t", "past").toLowerCase();
+        String num = constraints.getOrDefault("num", "s").toLowerCase();
+
+        // שליפת המילה המדויקת (למשל "קנתה")
+        String exactWord = chosenVerb.getWord(t, g, num);
+
+        // החזרת ישות וירטואלית שתמיד מחזירה את המילה המדויקת ללא קשר ל-Key שנבקש ב-Property
+        return new QuestionEntity() {
+            @Override
+            public String getProperty(String key) {
+                return exactWord;
+            }
+        };
     }
 
+    public static void fillHumans() {
+        humans.add(new Human("שמעון", Gender.MALE));
+        humans.add(new Human("יוסף", Gender.MALE));
+        humans.add(new Human("אברהם", Gender.MALE));
+        humans.add(new Human("דוד", Gender.MALE));
 
+        humans.add(new Human("נועה", Gender.FEMALE));
+        humans.add(new Human("תמר", Gender.FEMALE));
+        humans.add(new Human("יעל", Gender.FEMALE));
+        humans.add(new Human("מאיה", Gender.FEMALE));
+    }
 
+    public static void fillItems() {
+        // --- FOOD (אוכל) ---
+        items.add(new Item("תפוח", "תפוחים", Gender.MALE, ItemCategory.FOOD, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("בננה", "בננות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.GENERAL));
+        items.add(new Item("תפוז", "תפוזים", Gender.MALE, ItemCategory.FOOD, ItemCategory.GENERAL));
+        items.add(new Item("סוכרייה", "סוכריות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("פיצה", "פיצות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.GENERAL));
 
+        // --- COLLECTIBLE (פריטי אספנות) ---
+        items.add(new Item("גולה", "גולות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("קלף", "קלפים", Gender.MALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("מדבקה", "מדבקות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("גלויה", "גלויות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
 
+        // --- STATIONERY (ציוד לימודי) ---
+        items.add(new Item("עיפרון", "עפרונות", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
+        items.add(new Item("מחברת", "מחברות", Gender.FEMALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
+        items.add(new Item("ספר", "ספרים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
+        items.add(new Item("מחק", "מחקים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
+        items.add(new Item("עט", "עטים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
+
+        // --- TOY (צעצועים) ---
+        items.add(new Item("כדור", "כדורים", Gender.MALE, ItemCategory.TOY, ItemCategory.GENERAL));
+        items.add(new Item("בובה", "בובות", Gender.FEMALE, ItemCategory.TOY, ItemCategory.GENERAL));
+        items.add(new Item("מכונית צעצוע", "מכוניות צעצוע", Gender.FEMALE, ItemCategory.TOY, ItemCategory.GENERAL));
+        items.add(new Item("פאזל", "פאזלים", Gender.MALE, ItemCategory.TOY, ItemCategory.GENERAL));
+
+        // --- MONEY (כסף) ---
+        items.add(new Item("שקל", "שקלים", Gender.MALE, ItemCategory.MONEY, ItemCategory.GENERAL));
+        items.add(new Item("מטבע זהב", "מטבעות זהב", Gender.MALE, ItemCategory.MONEY, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("שטר", "שטרות", Gender.MALE, ItemCategory.MONEY, ItemCategory.GENERAL));
+    }
+
+    public static void fillVerbs() {
+        // --- קנה (מתאים ל: MONEY, GENERAL) ---
+        Verb buy = new Verb("buy");
+        buy.addForm("past", "MALE", "s", "קנה");
+        buy.addForm("past", "FEMALE", "s", "קנתה");
+        buy.addForm("past", "MALE", "p", "קנו");
+        buy.addForm("past", "FEMALE", "p", "קנו");
+        verbs.add(buy);
+
+        // --- אכל (מתאים ל: FOOD) ---
+        Verb eat = new Verb("eat");
+        eat.addForm("past", "MALE", "s", "אכל");
+        eat.addForm("past", "FEMALE", "s", "אכלה");
+        eat.addForm("past", "MALE", "p", "אכלו");
+        eat.addForm("past", "FEMALE", "p", "אכלו");
+        verbs.add(eat);
+
+        // --- נתן (מתאים ל: COLLECTIBLE, GENERAL) ---
+        Verb give = new Verb("give");
+        give.addForm("past", "MALE", "s", "נתן");
+        give.addForm("past", "FEMALE", "s", "נתנה");
+        give.addForm("past", "MALE", "p", "נתנו");
+        give.addForm("past", "FEMALE", "p", "נתנו");
+        verbs.add(give);
+
+        // --- קיבל (מתאים ל: COLLECTIBLE, GENERAL, MONEY) ---
+        Verb receive = new Verb("receive");
+        receive.addForm("past", "MALE", "s", "קיבל");
+        receive.addForm("past", "FEMALE", "s", "קיבלה");
+        receive.addForm("past", "MALE", "p", "קיבלו");
+        receive.addForm("past", "FEMALE", "p", "קיבלו");
+        verbs.add(receive);
+
+        // --- מצא (מתאים ל: COLLECTIBLE, GENERAL) ---
+        Verb find = new Verb("find");
+        find.addForm("past", "MALE", "s", "מצא");
+        find.addForm("past", "FEMALE", "s", "מצאה");
+        find.addForm("past", "MALE", "p", "מצאו");
+        find.addForm("past", "FEMALE", "p", "מצאו");
+        verbs.add(find);
+
+        // --- איבד (מתאים ל: COLLECTIBLE, GENERAL) ---
+        Verb lose = new Verb("lose");
+        lose.addForm("past", "MALE", "s", "איבד");
+        lose.addForm("past", "FEMALE", "s", "איבדה");
+        lose.addForm("past", "MALE", "p", "איבדו");
+        lose.addForm("past", "FEMALE", "p", "איבדו");
+        verbs.add(lose);
+
+        // --- אסף (מתאים ל: COLLECTIBLE) ---
+        Verb collect = new Verb("collect");
+        collect.addForm("past", "MALE", "s", "אסף");
+        collect.addForm("past", "FEMALE", "s", "אספה");
+        collect.addForm("past", "MALE", "p", "אספו");
+        collect.addForm("past", "FEMALE", "p", "אספו");
+        verbs.add(collect);
+
+        // --- חילק (מתאים ל: שאלות חילוק - FOOD, COLLECTIBLE) ---
+        Verb divide = new Verb("divide");
+        divide.addForm("past", "MALE", "s", "חילק");
+        divide.addForm("past", "FEMALE", "s", "חילקה");
+        divide.addForm("past", "MALE", "p", "חילקו");
+        divide.addForm("past", "FEMALE", "p", "חילקו");
+        verbs.add(divide);
+    }
+
+    public static void fillPlaces(){
+        // --- חנויות ועסקים (STORE) ---
+        places.add(new Place("מכולת", "מכולות", Gender.FEMALE, PlaceType.STORE, FOOD, GENERAL));
+        places.add(new Place("סופרמרקט", "סופרמרקטים", Gender.MALE, PlaceType.STORE, FOOD, GENERAL));
+        places.add(new Place("מאפייה", "מאפיות", Gender.FEMALE, PlaceType.STORE, FOOD));
+        places.add(new Place("קיוסק", "קיוסקים", Gender.MALE, PlaceType.STORE, FOOD));
+        places.add(new Place("שוק", "שווקים", Gender.MALE, PlaceType.STORE, FOOD, COLLECTIBLE, GENERAL));
+        places.add(new Place("חנות צעצועים", "חנויות צעצועים", Gender.FEMALE, PlaceType.STORE, TOY, COLLECTIBLE));
+        places.add(new Place("חנות עתיקות", "חנויות עתיקות", Gender.FEMALE, PlaceType.STORE, COLLECTIBLE));
+        places.add(new Place("חנות יצירה", "חנויות יצירה", Gender.FEMALE, PlaceType.STORE, STATIONERY, TOY));
+        places.add(new Place("חנות כלי כתיבה", "חנויות כלי כתיבה", Gender.FEMALE, PlaceType.STORE, STATIONERY, GENERAL));
+        places.add(new Place("קניון", "קניונים", Gender.MALE, PlaceType.STORE, GENERAL, FOOD, TOY, STATIONERY, MONEY));
+        places.add(new Place("חנות", "חנויות", Gender.FEMALE, PlaceType.STORE, GENERAL, FOOD, TOY));
+
+        // --- מקומות ציבוריים (PUBLIC) ---
+        places.add(new Place("ספרייה", "ספריות", Gender.FEMALE, PlaceType.PUBLIC, STATIONERY, GENERAL));
+        places.add(new Place("בנק", "בנקים", Gender.MALE, PlaceType.PUBLIC, MONEY));
+        places.add(new Place("קופה", "קופות", Gender.FEMALE, PlaceType.PUBLIC, MONEY)); // יכול להיות גם בתוך חנות
+        places.add(new Place("כספומט", "כספומטים", Gender.MALE, PlaceType.PUBLIC, MONEY));
+        places.add(new Place("משחקייה", "משחקיות", Gender.FEMALE, PlaceType.PUBLIC, TOY));
+        places.add(new Place("בית ספר", "בתי ספר", Gender.MALE, PlaceType.PUBLIC, STATIONERY, GENERAL)); // חדש
+
+        // --- מקומות בחוץ (OUTDOORS) ---
+        places.add(new Place("פארק", "פארקים", Gender.MALE, PlaceType.OUTDOORS, TOY, COLLECTIBLE, GENERAL));
+        places.add(new Place("גינה", "גינות", Gender.FEMALE, PlaceType.OUTDOORS, TOY, GENERAL)); // חדש
+        places.add(new Place("רחוב", "רחובות", Gender.MALE, PlaceType.OUTDOORS, GENERAL)); // חדש
+        places.add(new Place("חצר", "חצרות", Gender.FEMALE, PlaceType.OUTDOORS, GENERAL, TOY)); // חדש
+
+        // --- מקומות פרטיים (HOME) ---
+        places.add(new Place("בית", "בתים", Gender.MALE, PlaceType.HOME, GENERAL, FOOD, TOY, COLLECTIBLE));
+        places.add(new Place("חדר", "חדרים", Gender.MALE, PlaceType.HOME, GENERAL, TOY, STATIONERY)); // חדש
+    }
 
 
 
