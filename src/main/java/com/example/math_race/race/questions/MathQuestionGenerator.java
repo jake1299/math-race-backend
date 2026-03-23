@@ -42,67 +42,72 @@ public class MathQuestionGenerator {
         for (String tag : tags) {
 
             if (tag.startsWith("[IF:")) {
-                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[IF:(.+?):<(.*?)>:<(.*?)>\\]");
-                java.util.regex.Matcher matcher = pattern.matcher(result);
+                try {
+                    int secondColon = tag.indexOf(":", 4);
+                    if (secondColon == -1) continue;
+                    String conditionFromTag = tag.substring(4, secondColon);
 
-                if (matcher.find()) {
-                    String fullMatch = matcher.group(0);
-                    String condition = matcher.group(1);
-                    String trueText = matcher.group(2);
-                    String falseText = matcher.group(3);
+                    String regex = "\\[IF:" + java.util.regex.Pattern.quote(conditionFromTag) + ":<(.*?)>:<(.*?)>]";
+                    java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+                    java.util.regex.Matcher matcher = pattern.matcher(result);
 
-                    String operator = "";
-                    if (condition.contains("=")) operator = "=";
-                    else if (condition.contains(">")) operator = ">";
-                    else if (condition.contains("<")) operator = "<";
-                    else if (condition.contains(">=")) operator = ">=";
-                    else if (condition.contains("<=")) operator = "<=";
+                    if (matcher.find()) {
+                        String fullMatchInResult = matcher.group(0);
+                        String trueOption = matcher.group(1);
+                        String falseOption = matcher.group(2);
 
-                    if (!operator.isEmpty()) {
+                        String operator = "";
+                        if (conditionFromTag.contains(">=")) operator = ">=";
+                        else if (conditionFromTag.contains("<=")) operator = "<=";
+                        else if (conditionFromTag.contains(">")) operator = ">";
+                        else if (conditionFromTag.contains("<")) operator = "<";
+                        else if (conditionFromTag.contains("=")) operator = "=";
 
-                        int opIndex = condition.indexOf(operator);
-                        String leftSide = condition.substring(0, opIndex).trim();
-                        String expectedStr = condition.substring(opIndex + operator.length()).trim();
+                        if (!operator.isEmpty()) {
+                            int opIndex = conditionFromTag.indexOf(operator);
+                            String leftSide = conditionFromTag.substring(0, opIndex).trim();
+                            String expectedStr = conditionFromTag.substring(opIndex + operator.length()).trim();
 
-                        String entityId = leftSide;
-                        String propertyKey = "";
+                            String entityId = leftSide;
+                            String propertyKey = "";
 
-                        if (leftSide.contains(":")) {
-                            String[] varParts = leftSide.split(":", 2);
-                            entityId = varParts[0].trim();
-                            propertyKey = varParts[1].trim();
-                        }
-
-                        String actualStr = "";
-                        if (memory.containsKey(entityId)) {
-                            QuestionEntity entity = memory.get(entityId);
-                            actualStr = entity.getProperty(propertyKey);
-                        }
-
-                        boolean conditionMet = false;
-
-                        if (operator.equals("=")) {
-                            conditionMet = actualStr.equals(expectedStr);
-                        } else {
-                            try {
-                                double actualNum = Double.parseDouble(actualStr);
-                                double expectedNum = Double.parseDouble(expectedStr);
-
-                                if (operator.equals(">")) conditionMet = actualNum > expectedNum;
-                                else if (operator.equals("<")) conditionMet = actualNum < expectedNum;
-                                else if (operator.equals(">=")) conditionMet = actualNum >= expectedNum;
-                                else if (operator.equals("<=")) conditionMet = actualNum <= expectedNum;
-
-                            } catch (NumberFormatException e) {
-                                System.out.println("Warning: Cannot use < or > on non-numeric values: " + actualStr);
+                            if (leftSide.contains(":")) {
+                                String[] varParts = leftSide.split(":", 2);
+                                entityId = varParts[0].trim();
+                                propertyKey = varParts[1].trim();
                             }
+
+                            String actualStr = "";
+                            if (memory.containsKey(entityId)) {
+                                actualStr = memory.get(entityId).getProperty(propertyKey);
+                            }
+
+                            boolean conditionMet = false;
+                            if (operator.equals("=")) {
+                                conditionMet = actualStr.equals(expectedStr);
+                            } else {
+                                try {
+                                    double actualNum = Double.parseDouble(actualStr);
+                                    double expectedNum = Double.parseDouble(expectedStr);
+                                    conditionMet = switch (operator) {
+                                        case ">" -> actualNum > expectedNum;
+                                        case "<" -> actualNum < expectedNum;
+                                        case ">=" -> actualNum >= expectedNum;
+                                        case "<=" -> actualNum <= expectedNum;
+                                        default -> conditionMet;
+                                    };
+                                } catch (NumberFormatException nfe) {
+                                    System.out.println("Warning: Numeric comparison failed for: " + actualStr);
+                                }
+                            }
+
+                            String chosenText = conditionMet ? trueOption : falseOption;
+                            String resolvedText = gene(chosenText, memory);
+                            result = result.replace(fullMatchInResult, resolvedText);
                         }
-
-                        String chosenText = conditionMet ? trueText : falseText;
-                        String resolvedText = gene(chosenText, memory);
-
-                        result = result.replace(fullMatch, resolvedText);
                     }
+                } catch (Exception e) {
+                    System.out.println("Error parsing IF tag: " + tag);
                 }
                 continue;
             }
@@ -167,7 +172,7 @@ public class MathQuestionGenerator {
                 if (depth > 0) {
                     depth--;
 
-                    if (depth == 0 && indexStart != -1) {
+                    if (depth == 0) {
                         String tag = template.substring(indexStart, i + 1);
                         tags.add(tag);
                         indexStart = -1;
@@ -326,6 +331,7 @@ public class MathQuestionGenerator {
 
                     return new NumberEntity(randomNumber);
                 } catch (NumberFormatException e) {
+                    System.out.println("Warning: Invalid value: " + valStr);
                 }
             }
 
@@ -333,6 +339,7 @@ public class MathQuestionGenerator {
                 try {
                     return new NumberEntity(Integer.parseInt(valStr));
                 } catch (NumberFormatException e) {
+                    System.out.println("Warning: Invalid value for number: " + valStr);
                 }
             }
         }
@@ -363,12 +370,7 @@ public class MathQuestionGenerator {
         String exactWord = chosenVerb.getWord(t, g, num);
 
         // החזרת ישות וירטואלית שתמיד מחזירה את המילה המדויקת ללא קשר ל-Key שנבקש ב-Property
-        return new QuestionEntity() {
-            @Override
-            public String getProperty(String key) {
-                return exactWord;
-            }
-        };
+        return key -> exactWord;
     }
 
     public static void fillHumans() {
