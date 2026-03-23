@@ -33,12 +33,79 @@ public class MathQuestionGenerator {
 
     public static String gene(String template, Map<String, QuestionEntity> memory) {
         Set<String> tags = extractUniqueTags(template);
+
         if (memory == null) {
             memory = new HashMap<>();
         }
         String result = template;
 
         for (String tag : tags) {
+
+            if (tag.startsWith("[IF:")) {
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[IF:(.+?):<(.*?)>:<(.*?)>\\]");
+                java.util.regex.Matcher matcher = pattern.matcher(result);
+
+                if (matcher.find()) {
+                    String fullMatch = matcher.group(0);
+                    String condition = matcher.group(1);
+                    String trueText = matcher.group(2);
+                    String falseText = matcher.group(3);
+
+                    String operator = "";
+                    if (condition.contains("=")) operator = "=";
+                    else if (condition.contains(">")) operator = ">";
+                    else if (condition.contains("<")) operator = "<";
+                    else if (condition.contains(">=")) operator = ">=";
+                    else if (condition.contains("<=")) operator = "<=";
+
+                    if (!operator.isEmpty()) {
+
+                        int opIndex = condition.indexOf(operator);
+                        String leftSide = condition.substring(0, opIndex).trim();
+                        String expectedStr = condition.substring(opIndex + operator.length()).trim();
+
+                        String entityId = leftSide;
+                        String propertyKey = "";
+
+                        if (leftSide.contains(":")) {
+                            String[] varParts = leftSide.split(":", 2);
+                            entityId = varParts[0].trim();
+                            propertyKey = varParts[1].trim();
+                        }
+
+                        String actualStr = "";
+                        if (memory.containsKey(entityId)) {
+                            QuestionEntity entity = memory.get(entityId);
+                            actualStr = entity.getProperty(propertyKey);
+                        }
+
+                        boolean conditionMet = false;
+
+                        if (operator.equals("=")) {
+                            conditionMet = actualStr.equals(expectedStr);
+                        } else {
+                            try {
+                                double actualNum = Double.parseDouble(actualStr);
+                                double expectedNum = Double.parseDouble(expectedStr);
+
+                                if (operator.equals(">")) conditionMet = actualNum > expectedNum;
+                                else if (operator.equals("<")) conditionMet = actualNum < expectedNum;
+                                else if (operator.equals(">=")) conditionMet = actualNum >= expectedNum;
+                                else if (operator.equals("<=")) conditionMet = actualNum <= expectedNum;
+
+                            } catch (NumberFormatException e) {
+                                System.out.println("Warning: Cannot use < or > on non-numeric values: " + actualStr);
+                            }
+                        }
+
+                        String chosenText = conditionMet ? trueText : falseText;
+                        String resolvedText = gene(chosenText, memory);
+
+                        result = result.replace(fullMatch, resolvedText);
+                    }
+                }
+                continue;
+            }
             TagInfo info = TagInfo.parse(tag);
             if (!tag.startsWith("[#")) {
                 Map<String, String> resolvedConstraints = new HashMap<>();
@@ -85,18 +152,49 @@ public class MathQuestionGenerator {
         Set<String> tags = new LinkedHashSet<>();
 
         int indexStart = -1;
+        int depth = 0; // המונה שמציל אותנו
+
         for (int i = 0; i < template.length(); i++) {
-            if (template.charAt(i) == '[') {
-                indexStart = i;
-            } else if (template.charAt(i) == ']' && indexStart != -1) {
-                String tag = template.substring(indexStart, i + 1);
-                tags.add(tag);
-                indexStart = -1;
+            char c = template.charAt(i);
+
+            if (c == '[') {
+                if (depth == 0) {
+                    indexStart = i;
+                }
+                depth++;
+
+            } else if (c == ']') {
+                if (depth > 0) {
+                    depth--;
+
+                    if (depth == 0 && indexStart != -1) {
+                        String tag = template.substring(indexStart, i + 1);
+                        tags.add(tag);
+                        indexStart = -1;
+                    }
+                }
             }
         }
 
         return tags;
     }
+
+//    public static Set<String> extractUniqueTags(String template) {
+//        Set<String> tags = new LinkedHashSet<>();
+//
+//        int indexStart = -1;
+//        for (int i = 0; i < template.length(); i++) {
+//            if (template.charAt(i) == '[') {
+//                indexStart = i;
+//            } else if (template.charAt(i) == ']' && indexStart != -1) {
+//                String tag = template.substring(indexStart, i + 1);
+//                tags.add(tag);
+//                indexStart = -1;
+//            }
+//        }
+//
+//        return tags;
+//    }
 
     private static String resolveValue(String value, Map<String, QuestionEntity> memory) {
         if (value == null || value.isEmpty()) {
@@ -286,35 +384,34 @@ public class MathQuestionGenerator {
     }
 
     public static void fillItems() {
-        // --- FOOD (אוכל) ---
-        items.add(new Item("תפוח", "תפוחים", Gender.MALE, ItemCategory.FOOD, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        // --- FOOD (אוכל - דברים שאוכלים או קונים במכולת) ---
+        items.add(new Item("תפוח", "תפוחים", Gender.MALE, ItemCategory.FOOD, ItemCategory.GENERAL));
         items.add(new Item("בננה", "בננות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.GENERAL));
         items.add(new Item("תפוז", "תפוזים", Gender.MALE, ItemCategory.FOOD, ItemCategory.GENERAL));
-        items.add(new Item("סוכרייה", "סוכריות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        items.add(new Item("סוכרייה", "סוכריות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.GENERAL));
         items.add(new Item("פיצה", "פיצות", Gender.FEMALE, ItemCategory.FOOD, ItemCategory.GENERAL));
 
-        // --- COLLECTIBLE (פריטי אספנות) ---
+        // --- COLLECTIBLE (פריטי אספנות - דברים שאוספים בכיס או באלבום) ---
         items.add(new Item("גולה", "גולות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
         items.add(new Item("קלף", "קלפים", Gender.MALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
         items.add(new Item("מדבקה", "מדבקות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
         items.add(new Item("גלויה", "גלויות", Gender.FEMALE, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
+        // מטבע זהב הוא גם כסף וגם פריט אספנות - זה שילוב מעולה!
+        items.add(new Item("מטבע זהב", "מטבעות זהב", Gender.MALE, ItemCategory.MONEY, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
 
         // --- STATIONERY (ציוד לימודי) ---
         items.add(new Item("עיפרון", "עפרונות", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
         items.add(new Item("מחברת", "מחברות", Gender.FEMALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
         items.add(new Item("ספר", "ספרים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
         items.add(new Item("מחק", "מחקים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
-        items.add(new Item("עט", "עטים", Gender.MALE, ItemCategory.STATIONERY, ItemCategory.GENERAL));
 
         // --- TOY (צעצועים) ---
         items.add(new Item("כדור", "כדורים", Gender.MALE, ItemCategory.TOY, ItemCategory.GENERAL));
         items.add(new Item("בובה", "בובות", Gender.FEMALE, ItemCategory.TOY, ItemCategory.GENERAL));
         items.add(new Item("מכונית צעצוע", "מכוניות צעצוע", Gender.FEMALE, ItemCategory.TOY, ItemCategory.GENERAL));
-        items.add(new Item("פאזל", "פאזלים", Gender.MALE, ItemCategory.TOY, ItemCategory.GENERAL));
 
-        // --- MONEY (כסף) ---
+        // --- MONEY (כסף - בדרך כלל ליחידות מידה של מחיר ועודף) ---
         items.add(new Item("שקל", "שקלים", Gender.MALE, ItemCategory.MONEY, ItemCategory.GENERAL));
-        items.add(new Item("מטבע זהב", "מטבעות זהב", Gender.MALE, ItemCategory.MONEY, ItemCategory.COLLECTIBLE, ItemCategory.GENERAL));
         items.add(new Item("שטר", "שטרות", Gender.MALE, ItemCategory.MONEY, ItemCategory.GENERAL));
     }
 
@@ -382,6 +479,21 @@ public class MathQuestionGenerator {
         divide.addForm("past", "MALE", "p", "חילקו");
         divide.addForm("past", "FEMALE", "p", "חילקו");
         verbs.add(divide);
+
+        // --- נכנס (מתאים ל: PLACE) ---
+        Verb enter = new Verb("enter");
+        enter.addForm("past", "MALE", "s", "נכנס");
+        enter.addForm("past", "FEMALE", "s", "נכנסה");
+        enter.addForm("past", "MALE", "p", "נכנסו");
+        enter.addForm("past", "FEMALE", "p", "נכנסו");
+        verbs.add(enter);
+
+        Verb be = new Verb("be");
+        be.addForm("past", "MALE", "s", "היה");
+        be.addForm("past", "FEMALE", "s", "הייתה");
+        be.addForm("past", "MALE", "p", "היו");
+        be.addForm("past", "FEMALE", "p", "היו");
+        verbs.add(be);
     }
 
     public static void fillPlaces(){
@@ -391,7 +503,7 @@ public class MathQuestionGenerator {
         places.add(new Place("מאפייה", "מאפיות", Gender.FEMALE, PlaceType.STORE, FOOD));
         places.add(new Place("קיוסק", "קיוסקים", Gender.MALE, PlaceType.STORE, FOOD));
         places.add(new Place("שוק", "שווקים", Gender.MALE, PlaceType.STORE, FOOD, COLLECTIBLE, GENERAL));
-        places.add(new Place("חנות צעצועים", "חנויות צעצועים", Gender.FEMALE, PlaceType.STORE, TOY, COLLECTIBLE));
+        places.add(new Place("חנות צעצועים", "חנויות צעצועים", Gender.FEMALE, PlaceType.STORE, TOY));
         places.add(new Place("חנות עתיקות", "חנויות עתיקות", Gender.FEMALE, PlaceType.STORE, COLLECTIBLE));
         places.add(new Place("חנות יצירה", "חנויות יצירה", Gender.FEMALE, PlaceType.STORE, STATIONERY, TOY));
         places.add(new Place("חנות כלי כתיבה", "חנויות כלי כתיבה", Gender.FEMALE, PlaceType.STORE, STATIONERY, GENERAL));

@@ -24,44 +24,101 @@ public class TagInfo {
         this.id = id;
     }
 
+
+
     public static TagInfo parse(String tag) {
         String clean = tag.substring(1, tag.length() - 1);
         List<String> parts = smartSplit(clean, ':');
 
-        String type = parts.get(0);
+        String type = parts.get(0).trim();
         Map<String, String> constraints = new HashMap<>();
         String property = "";
         String id = "";
 
         if (type.startsWith("#")) {
             id = type;
-            if (parts.size() > 1) property = parts.get(1);
+            if (parts.size() > 1) {
+                property = parts.get(1).trim();
+            }
             return new TagInfo(type, constraints, property, id);
         }
 
-        int lastIdx = parts.size() - 1;
-
-        if (lastIdx >= 1 && parts.get(lastIdx).startsWith("#")) {
-            id = parts.get(lastIdx);
-            lastIdx--;
+        int lastIndex = parts.size() - 1;
+        if (lastIndex > 0 && parts.get(lastIndex).trim().startsWith("#")) {
+            id = parts.get(lastIndex).trim();
+            parts.remove(lastIndex);
         }
 
-        if (lastIdx >= 1 && !parts.get(lastIdx).contains("=")) {
-            property = parts.get(lastIdx);
-            lastIdx--;
-        }
+        if (parts.size() == 2) {
+            String middle = parts.get(1).trim();
 
-        if (lastIdx >= 1) {
-            String constraintsPart = parts.get(1);
-            List<String> pairs = smartSplit(constraintsPart, ';');
-            for (String pair : pairs) {
-                List<String> kv = smartSplit(pair, '=');
-                if (kv.size() == 2) constraints.put(kv.get(0).trim(), kv.get(1).trim());
+            if (middle.contains("=")) {
+                parseConstraints(middle, constraints);
+            } else {
+                property = middle;
             }
+        } else if (parts.size() == 3) {
+
+            parseConstraints(parts.get(1).trim(), constraints);
+            property = parts.get(2).trim();
         }
 
         return new TagInfo(type, constraints, property, id);
     }
+
+    private static void parseConstraints(String constraintsPart, Map<String, String> constraints) {
+        List<String> pairs = smartSplit(constraintsPart, ';');
+        for (String pair : pairs) {
+            List<String> kv = smartSplit(pair, '=');
+            if (kv.size() >= 2) {
+                String key = kv.get(0).trim();
+
+                String value = pair.substring(key.length() + 1).trim();
+                constraints.put(key, value);
+            }
+        }
+    }
+
+
+
+//    public static TagInfo parse(String tag) {
+//        String clean = tag.substring(1, tag.length() - 1);
+//        List<String> parts = smartSplit(clean, ':');
+//
+//        String type = parts.get(0);
+//        Map<String, String> constraints = new HashMap<>();
+//        String property = "";
+//        String id = "";
+//
+//        if (type.startsWith("#")) {
+//            id = type;
+//            if (parts.size() > 1) property = parts.get(1);
+//            return new TagInfo(type, constraints, property, id);
+//        }
+//
+//        int lastIdx = parts.size() - 1;
+//
+//        if (lastIdx >= 1 && parts.get(lastIdx).startsWith("#")) {
+//            id = parts.get(lastIdx);
+//            lastIdx--;
+//        }
+//
+//        if (lastIdx >= 1 && !parts.get(lastIdx).contains("=")) {
+//            property = parts.get(lastIdx);
+//            lastIdx--;
+//        }
+//
+//        if (lastIdx >= 1) {
+//            String constraintsPart = parts.get(1);
+//            List<String> pairs = smartSplit(constraintsPart, ';');
+//            for (String pair : pairs) {
+//                List<String> kv = smartSplit(pair, '=');
+//                if (kv.size() == 2) constraints.put(kv.get(0).trim(), kv.get(1).trim());
+//            }
+//        }
+//
+//        return new TagInfo(type, constraints, property, id);
+//    }
 
 
     private static List<String> smartSplit(String s, char delimiter) {

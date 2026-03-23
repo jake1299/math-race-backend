@@ -34,6 +34,12 @@ public class Place implements QuestionEntity{
         if ("p".equals(key)) return plural;
         if ("g".equals(key)) return gender.toString();
 
+        if ("t".equalsIgnoreCase(key)) {
+            return categories.stream()
+                    .map(Enum::name)
+                    .collect(java.util.stream.Collectors.joining("|"));
+        }
+
         if ("pt".equals(key) || "place_type".equals(key)) return placeType.name();
 
         if ("he_she".equals(key)) {

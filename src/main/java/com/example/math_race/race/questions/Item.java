@@ -30,6 +30,17 @@ public class Item implements QuestionEntity {
         if ("s".equals(key)) return singular;
         if ("p".equals(key)) return plural;
         if ("g".equals(key)) return gender.name();
+
+        if ("t".equalsIgnoreCase(key)) {
+            return categories.stream()
+                    .map(Enum::name)
+                    .collect(java.util.stream.Collectors.joining("|"));
+        }
+
+        if ("one".equals(key)) {
+            return gender == Gender.MALE ? "אחד" : "אחת";
+        }
+
         return singular;
     }
 

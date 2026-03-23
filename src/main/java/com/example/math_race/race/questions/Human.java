@@ -29,6 +29,14 @@ public class Human implements QuestionEntity {
             return gender == Gender.MALE ? "לו" : "לה";
         }
 
+        if ("one".equals(key)) {
+            return gender == Gender.MALE ? "אחד" : "אחת";
+        }
+
+        if ("loves".equals(key) || "likes".equals(key)) {
+            return gender == Gender.MALE ? "אוהב" : "אוהבת";
+        }
+
         return name;
     }
 
