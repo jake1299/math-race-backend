@@ -4,15 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Place implements QuestionEntity{
+    private String id;
     private String singular;
     private String plural;
     private Gender gender;
@@ -20,7 +18,8 @@ public class Place implements QuestionEntity{
     private Set<ItemCategory> categories;
 
 
-    public Place(String singular, String plural, Gender gender, PlaceType placeType, ItemCategory... categories) {
+    public Place(String id,String singular, String plural, Gender gender, PlaceType placeType, ItemCategory... categories) {
+        this.id = id;
         this.singular = singular;
         this.plural = plural;
         this.gender = gender;
@@ -30,6 +29,7 @@ public class Place implements QuestionEntity{
 
     @Override
     public String getProperty(String key) {
+        if ("id".equals(key)) return id;
         if ("s".equals(key)) return singular;
         if ("p".equals(key)) return plural;
         if ("g".equals(key)) return gender.toString();
@@ -66,6 +66,17 @@ public class Place implements QuestionEntity{
     }
 
     public boolean matches(Map<String, String> constraints) {
+        if (constraints.containsKey("id") && !constraints.get("id").equals("?")) {
+            String reqId = constraints.get("id").trim();
+
+            if (reqId.startsWith("!")) {
+                String excludedId = reqId.substring(1);
+
+                if (this.id.equalsIgnoreCase(excludedId)) return false;
+            } else {
+                if (!this.id.equalsIgnoreCase(reqId)) return false;
+            }
+        }
 
         if (constraints.containsKey("place_type") && !constraints.get("place_type").equals("?")) {
             String req = constraints.get("place_type").trim().toUpperCase();

@@ -4,5 +4,6 @@ public enum UnitType {
     WEIGHT,  // ק"ג, גרם
     LENGTH,  // מטר, ס"מ
     VOLUME,  // ליטר, מ"ל
-    COUNT    // יחידה, חתיכה, מארז
+    COUNT,    // יחידה, חתיכה, מארז
+    NONE
 }

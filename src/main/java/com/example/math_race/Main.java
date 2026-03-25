@@ -167,6 +167,37 @@ public class Main {
         });
 
 
+        templates.add(new String[]{
+                // 1. הגרלות נסתרות (מגדר מוכר, מקום, והתפקיד עצמו)
+                "[NUM:min=0;max=1:*:#OG]" +
+                        "[PLACE:place_type=STORE:*:#P1]" +
+                        "[ROLE:place_id=(#P1:id);role_type=OPERATOR:*:#O1]" + // יצירת המוכר בזיכרון בלי להדפיס
+
+                        // 2. הסיפור
+                        "[HUMAN:#1] [VERB:id=enter;t=past;g=(#1:g);num=s] ל[#P1:s]. " +
+                        "ה[IF:#OG=0:<[#O1:m_s] [VERB:id=offer;t=past;g=MALE;num=s]>:<[#O1:f_s] [VERB:id=offer;t=past;g=FEMALE;num=s]>] " +
+                        "[#1:to_him_her] [VERB:id=buy;f=inf] [ITEM:type=(#P1:t):p:#2] [ADJ:id=new;g=(#2:g);num=p:#A1]. " +
+
+                        "[#1:n] [VERB:id=want;t=past;g=(#1:g);num=s] [NUM:min=2;max=8:#X] " +
+                        // טיפול ברווחים: הרווח נמצא בתוך ה-IF כדי שלא יהיה רווח כפול כשאין יחידה
+                        "[UNIT:type=(#2:allowed_unit);item_category=(#2:t):p:#U1][IF:#2:allowed_unit=NONE:<>:< של>] [#2:p] [#A1]. " +
+
+                        "המחיר עבור כל [IF:#2:allowed_unit=NONE:<[#2:s]>:<[#U1:s]>] הוא [NUM:min=5;max=20:#Y] שקלים. " +
+
+                        // 3. השאלה
+                        "[NUM:min=0;max=1:*:#W]" +
+                        "[IF:#W=0:<" +
+                        "כמה שקלים סך הכל [#1:he_she] [VERB:id=need;t=past;g=(#1:g);num=s] [VERB:id=pay;f=inf]?" +
+                        ">:<" +
+                        "[#1:n] [VERB:id=pay;t=past;g=(#1:g);num=s] בשטר של [NUM:value=200:#Z] שקלים. " +
+                        "כמה עודף [#1:he_she] [VERB:id=receive;t=past;g=(#1:g);num=s] מה[IF:#OG=0:<[#O1:m_s]>:<[#O1:f_s]>]?" +
+                        ">]",
+
+                // 4. תשובה
+                "[IF:#W=0:<[NUM:value=(#X:mul_(#Y)):#R]>:<[NUM:value=(#Z:sub_(#X:mul_(#Y))):#R]>]"
+        });
+
+
 
         // הרצה של המנוע
         System.out.println("--- מריץ ייצור שאלות ---");

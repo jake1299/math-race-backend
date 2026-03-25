@@ -1,6 +1,9 @@
 package com.example.math_race.race.questions;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Unit implements QuestionEntity {
     private String id;
@@ -8,13 +11,15 @@ public class Unit implements QuestionEntity {
     private String plural;
     private Gender gender;
     private UnitType type;
+    private Set<ItemCategory> validItemCategories;
 
-    public Unit(String id, String singular, String plural, Gender gender, UnitType type) {
+    public Unit(String id, String singular, String plural, Gender gender, UnitType type, ItemCategory... categories) {
         this.id = id;
         this.singular = singular;
         this.plural = plural;
         this.gender = gender;
         this.type = type;
+        this.validItemCategories = new HashSet<>(Arrays.asList(categories));
     }
 
     @Override
@@ -29,6 +34,12 @@ public class Unit implements QuestionEntity {
 
         if ("id".equalsIgnoreCase(key)) {
             return id;
+        }
+
+        if ("vic".equalsIgnoreCase(key) | "valid_IC".equalsIgnoreCase(key)) {
+            return validItemCategories.stream()
+                    .map(Enum::name)
+                    .collect(java.util.stream.Collectors.joining("|"));
         }
 
         return singular;
@@ -72,6 +83,27 @@ public class Unit implements QuestionEntity {
             if (isNegated == expressionResult) {
                 return false;
             }
+        }
+
+        if (constraints.containsKey("item_category") && !constraints.get("item_category").equals("?")) {
+            String itemCatStr = constraints.get("item_category").trim().toUpperCase();
+
+            String[] itemCategories = itemCatStr.split("\\|");
+            boolean hasIntersection = false;
+
+            for (String cat : itemCategories) {
+                try {
+                    ItemCategory reqCat = ItemCategory.valueOf(cat.trim());
+                    if (this.validItemCategories.contains(reqCat)) {
+                        hasIntersection = true;
+                        break;
+                    }
+                } catch (IllegalArgumentException e) {
+                    continue;
+                }
+            }
+
+            if (!hasIntersection) return false;
         }
 
         if (constraints.containsKey("id") && !constraints.get("id").equals("?")) {
