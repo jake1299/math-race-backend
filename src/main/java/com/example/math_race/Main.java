@@ -1,7 +1,7 @@
 package com.example.math_race;
 
-import com.example.math_race.race.questions.MathQuestionGenerator;
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.QuestionEngine;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,10 +17,11 @@ public class Main {
         System.out.println("  Application 'Math Race' is running successfully!");
         System.out.println("----------------------------------------------------------\n");
 
-        Map<String, QuestionEntity> memory = new HashMap<>();
+        Map<String, TemplateTag> memory = new HashMap<>();
+        QuestionEngine questionEngine = new QuestionEngine();
 
 
-        String template1 = "[HUMAN::#1] [VERB:id=find;t=past;g=(#1:g);num=s:#V1] [NUM:min=10;max=20:#X] [ITEM:type=COLLECTIBLE:p:#2]. " +
+        String template1 = "[HUMAN:n:#1] [VERB:id=find;t=past;g=(#1:g);num=s:#V1] [NUM:min=10;max=20:#X] [ITEM:type=COLLECTIBLE:p:#2]. " +
                 "[#1:he_she] [VERB:id=give;t=past;g=(#1:g);num=s:#V2] ל[HUMAN:n=!(#1:n):#3] [NUM:min=2;max=5:#Y] [#2:p]. " +
                 "כמה [#2:p] נשארו ל[#1]?";
 
@@ -279,18 +280,180 @@ public class Main {
                         ">]"
         });
 
+        List<String[]> newTemplates = new ArrayList<>();
+//        newTemplates.add(new String[]{
+//                "שאלה",
+//                "תשובה",
+//                "תשובה שגויה 1",
+//                "תשובה שגויה 2",
+//                "תשובה שגויה 2",
+//                "רמז"
+//        });
+// 1. מהירות ודרך (תנועה) - מספרים דו-ספרתיים קטנים
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=walk:(present_+(#1:g)+_s):#V1] ל[PLACE:place_type=OUTDOORS:s:#P1] במהירות [NUM:min=12;max=20:#X] קמ\"ש " +
+                        "במשך [NUM:min=3;max=6:#Y] שעות. [NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<כמה ק\"מ [#1:he_she] [VERB:id=walk:(past_+(#1:g)+_s):#V2] סך הכל?>" +
+                        ":<אם המהירות הייתה קטנה ב-2 קמ\"ש, כמה ק\"מ [#1:he_she] היה [VERB:id=walk:(present_+(#1:g)+_s):#V3] באותו זמן?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#X:mul_(#Y)):#R]>:<[NUM:value=(#X:sub_2):mul_(#Y):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#X:add_(#Y)):#R]>:<[NUM:value=(#X:mul_(#Y)):sub_2:#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#X:mul_(#Y)):add_10:#R]>:<[NUM:value=(#X:add_2):mul_(#Y):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#X:mul_(#Y)):sub_10:#R]>:<[NUM:value=(#X:mul_(#Y)):#R]>]",
+                "[IF:(#W)=0:<דרך שווה למהירות כפול זמן.>:<קודם מצא את המהירות החדשה (פחות 2), ואז הכפל בזמן.>]"
+        });
+
+// 2. גיאומטריה: שטח והיקף של מלבן - מספרים דורשי מחשבה
+        newTemplates.add(new String[]{
+                "ב[PLACE:place_type=EDUCATION|HOME:s:#P1] יש חדר מלבני. האורך שלו הוא [NUM:min=12;max=25:#L] מטרים " +
+                        "והרוחב הוא [NUM:min=4;max=9:#WIDTH] מטרים. [NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<מה שטח החדר במ\"ר?>" +
+                        ":<מה היקף החדר במטרים?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#L:mul_(#WIDTH)):#R]>:<[NUM:value=(#L:add_(#WIDTH)):mul_2:#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#L:add_(#WIDTH)):#R]>:<[NUM:value=(#L:mul_(#WIDTH)):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#L:mul_(#WIDTH)):mul_2:#R]>:<[NUM:value=(#L:add_(#WIDTH)):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#L:mul_(#WIDTH)):sub_10:#R]>:<[NUM:value=(#L:add_(#WIDTH)):mul_2:add_4:#R]>]",
+                "[IF:(#W)=0:<שטח הוא אורך כפול רוחב.>:<היקף הוא סכום כל ארבעת הצלעות (אורך ועוד רוחב, כפול שתיים).>]"
+        });
+
+// 3. יחס ופרופורציה - כפולות קצת יותר מאתגרות
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=prepare:(present_+(#1:g)+_s):#V1] מתכון. היחס בין כוסות סוכר לכוסות קמח הוא 1 ל-[NUM:min=3;max=6:#RATIO]. " +
+                        "[NUM:min=4;max=12:*:#MULT][NUM:value=(#RATIO:mul_(#MULT)):*:#FLOUR][NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<אם [#1:he_she] [VERB:id=put:(past_+(#1:g)+_s):#V2] [#MULT] כוסות סוכר, כמה כוסות קמח צריך?>" +
+                        ":<אם [#1:he_she] [VERB:id=put:(past_+(#1:g)+_s):#V3] [#FLOUR] כוסות קמח, כמה כוסות סוכר צריך?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#FLOUR):#R]>:<[NUM:value=(#MULT):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#MULT:add_(#RATIO)):#R]>:<[NUM:value=(#FLOUR:mul_(#RATIO)):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#FLOUR:add_2):#R]>:<[NUM:value=(#MULT:add_2):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#FLOUR:sub_2):#R]>:<[NUM:value=(#MULT:sub_1):#R]>]",
+                "[IF:(#W)=0:<על כל כוס סוכר, שמים [#RATIO] כוסות קמח. הכפל ביחס.>:<חלק את כמות הקמח במספר היחס כדי למצוא את הסוכר.>]"
+        });
+
+// 4. שברים פשוטים - עבודה עם כמויות גדולות יותר שמתחלקות ב-4
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=buy:(past_+(#1:g)+_s):#V1] [NUM:min=10;max=25:*:#BASE][NUM:value=(#BASE:mul_4):#X] [ITEM:type=SWEETS:p:#2]. " +
+                        "[#1:he_she] [VERB:id=give:(past_+(#1:g)+_s):#V2] ל[HUMAN:n=!(#1:n):#3] [NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<חצי>:<רבע>] מה[#2:p]. " +
+                        "כמה [#2:p] נשארו ל[#1]?",
+
+                "[IF:(#W)=0:<[NUM:value=(#BASE:mul_2):#R]>:<[NUM:value=(#BASE:mul_3):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#BASE):#R]>:<[NUM:value=(#BASE):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#BASE:mul_3):#R]>:<[NUM:value=(#BASE:mul_2):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#BASE:mul_2):add_10:#R]>:<[NUM:value=(#BASE:mul_3):add_5:#R]>]",
+                "[IF:(#W)=0:<כדי למצוא כמה נשארו אחרי שנתת חצי, פשוט חלק את הכמות הכוללת ב-2.>:<כדי למצוא כמה נשארו, חלק ל-4, ואז חסר את זה מהכמות הכוללת.>]"
+        });
+
+// 5. מציאת נעלם - משתני עזר מובנים ומספרים קלים לחילוק הופכי
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=choose:(past_+(#1:g)+_s):#V1] מספר. " +
+                        "[NUM:min=6;max=15:*:#ORIG][NUM:min=2;max=4:*:#X][NUM:min=5;max=15:*:#Y]" +
+                        "[NUM:value=(#ORIG:mul_(#X)):*:#TEMP1][NUM:value=(#TEMP1:add_(#Y)):*:#RES1]" +
+                        "[NUM:value=(#ORIG:add_(#X)):*:#TEMP2][NUM:value=(#TEMP2:sub_(#Y)):*:#RES2]" +
+                        "[NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<[#1:he_she] [VERB:id=multiply:(past_+(#1:g)+_s):#V2] אותו ב-[#X] והוסיף [#Y]. התוצאה היא [#RES1].>" +
+                        ":<[#1:he_she] הוסיף לו [#X] וחיסר [#Y]. התוצאה היא [#RES2].>] " +
+                        "מה המספר המקורי?",
+
+                "[NUM:value=(#ORIG):#R]",
+                "[IF:(#W)=0:<[NUM:value=(#ORIG:mul_2):#R]>:<[NUM:value=(#ORIG:add_1):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#ORIG:sub_1):#R]>:<[NUM:value=(#ORIG:sub_2):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#ORIG:add_2):#R]>:<[NUM:value=(#ORIG:add_3):#R]>]",
+                "[IF:(#W)=0:<בצע את הפעולות ההפוכות מהסוף להתחלה: חסר [#Y] ואז חלק ב-[#X].>:<בצע את הפעולות ההפוכות מהסוף להתחלה: הוסף [#Y] ואז חסר [#X].>]"
+        });
+
+// 6. ממוצעים - כפל דו ספרתי בחד ספרתי
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=read:(present_+(#1:g)+_s):#V1] ספר. בממוצע [#1:he_she] [VERB:id=read:(past_+(#1:g)+_s):#V2] " +
+                        "[NUM:min=15;max=25:#AVG] עמודים ביום במשך [NUM:min=4;max=7:#DAYS] ימים. [NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<כמה עמודים [#1:he_she] [VERB:id=read:(past_+(#1:g)+_s):#V3] סך הכל?>" +
+                        ":<אם הממוצע היה גדול ב-2 עמודים ליום, כמה עמודים [#1:he_she] היה [VERB:id=read:(present_+(#1:g)+_s):#V4] סך הכל?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#AVG:mul_(#DAYS)):#R]>:<[NUM:value=(#AVG:add_2):mul_(#DAYS):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AVG:add_(#DAYS)):#R]>:<[NUM:value=(#AVG:mul_(#DAYS)):add_2:#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AVG:mul_(#DAYS)):add_10:#R]>:<[NUM:value=(#AVG:mul_(#DAYS)):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AVG:mul_(#DAYS)):sub_5:#R]>:<[NUM:value=(#AVG:add_1):mul_(#DAYS):#R]>]",
+                "[IF:(#W)=0:<סך הכל שווה לממוצע כפול מספר הימים.>:<מצא את הממוצע החדש, ואז הכפל אותו במספר הימים.>]"
+        });
+
+// 7. חוקיות וסדרות - דורש חיבור מדורג בראש
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=arrange:(present_+(#1:g)+_s):#V1] [ITEM:type=STATIONERY:p:#2] בשורה. " +
+                        "בשורה הראשונה יש [NUM:min=5;max=12:#START] [#2:p], ובכל שורה הבאה יש [NUM:min=3;max=7:#JUMP] [#2:p] יותר מאשר בשורה הקודמת. " +
+                        "[NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<כמה [#2:p] יש בשורה השלישית?>" +
+                        ":<כמה [#2:p] יש בסך הכל ב-3 השורות הראשונות יחד?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#JUMP:mul_2):add_(#START):#R]>:<[NUM:value=(#START:mul_3):add_(#JUMP:mul_3):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#JUMP:mul_3):add_(#START):#R]>:<[NUM:value=(#START:mul_3):add_(#JUMP:mul_2):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#START:add_(#JUMP)):#R]>:<[NUM:value=(#JUMP:mul_2):add_(#START):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#JUMP:mul_2):add_(#START):add_2:#R]>:<[NUM:value=(#START:mul_3):add_(#JUMP:mul_3):sub_2:#R]>]",
+                "[IF:(#W)=0:<הוסף פעמיים את הגידול לכמות ההתחלתית.>:<חשב את הכמות בכל אחת משלוש השורות, וחבר את הכל יחד.>]"
+        });
+
+// 8. תכנון תקציב וחיסכון - מתוקן עם היגיון זמנים נכון
+        newTemplates.add(new String[]{
+                "ל[HUMAN:#1] יש קופה עם [NUM:min=100;max=250:#TOTAL] שקלים. " +
+                        "בכל שבוע [#1:he_she] [VERB:id=save:(present_+(#1:g)+_s):#V1] עוד [NUM:min=20;max=50:#SAVE] שקלים. " +
+                        "[NUM:min=3;max=8:*:#M][NUM:value=(#SAVE:mul_(#M)):*:#SPEND][NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<כמה שקלים יהיו [#1:to_him_her] בעוד [NUM:min=4;max=9:#WEEKS] שבועות?>" +
+                        ":<אם [#1:he_she] [VERB:id=want:(present_+(#1:g)+_s):#V2] [VERB:id=buy:INF:#TEMP10] משהו שעולה [#SPEND] שקלים (מבלי לגעת בכסף שבקופה), כמה שבועות ייקח לחסוך את הסכום הזה?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#SAVE:mul_(#WEEKS)):add_(#TOTAL):#R]>:<[NUM:value=(#M):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#SAVE:mul_(#WEEKS)):#R]>:<[NUM:value=(#M:add_1):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#TOTAL:mul_(#WEEKS)):#R]>:<[NUM:value=(#M:sub_1):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#SAVE:mul_(#WEEKS)):add_(#TOTAL):add_20:#R]>:<[NUM:value=(#M:add_2):#R]>]",
+                "[IF:(#W)=0:<הכפל את החיסכון במספר השבועות והוסף לסכום ההתחלתי.>:<חלק את מחיר הפריט בסכום החיסכון השבועי.>]"
+        });
+
+// 9. בעיות גיל - סכומים גדולים יותר שמצריכים ריכוז
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] בן [NUM:min=12;max=16:#AGE1]. [HUMAN:n=!(#1:n):#2] גדול ממנו ב-[NUM:min=4;max=9:#DIFF] שנים. " +
+                        "[NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<בן כמה יהיה [#2] בעוד [NUM:min=5;max=10:#YEARS] שנים?>" +
+                        ":<מה סכום הגילים שלהם היום?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#AGE1:add_(#DIFF)):add_(#YEARS):#R]>:<[NUM:value=(#AGE1:mul_2):add_(#DIFF):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AGE1:add_(#YEARS)):#R]>:<[NUM:value=(#AGE1:add_(#DIFF)):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AGE1:add_(#DIFF)):sub_(#YEARS):#R]>:<[NUM:value=(#AGE1:mul_2):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#AGE1:add_(#DIFF)):#R]>:<[NUM:value=(#AGE1:mul_2):add_(#DIFF):add_2:#R]>]",
+                "[IF:(#W)=0:<מצא את הגיל של [#2] היום, ואז הוסף את השנים שעברו.>:<חבר את הגיל של [#1] לגיל של [#2] (שהוא הגיל של [#1] ועוד ההפרש).>]"
+        });
+
+// 10. חישוב מארזים - כפל דו ספרתי בחד ספרתי (גבול עליון של לוח הכפל)
+        newTemplates.add(new String[]{
+                "[HUMAN:#1] [VERB:id=buy:(past_+(#1:g)+_s):#V1] [NUM:min=5;max=12:#PACKS] מארזים של [ITEM:type=DRINKS:p:#2]. " +
+                        "בכל מארז יש [NUM:min=4;max=8:#IN_PACK] [#2:p]. [NUM:min=0;max=1:*:#W]" +
+                        "[IF:(#W)=0:<כמה [#2:p] יש סך הכל ב-[#PACKS] המארזים?>" +
+                        ":<אם [#1:he_she] [VERB:id=give:(past_+(#1:g)+_s):#V2] לחברים מארז אחד שלם, כמה [#2:p] נשארו [#1:to_him_her]?>]",
+
+                "[IF:(#W)=0:<[NUM:value=(#PACKS:mul_(#IN_PACK)):#R]>:<[NUM:value=(#PACKS:sub_1):mul_(#IN_PACK):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#PACKS:add_(#IN_PACK)):#R]>:<[NUM:value=(#PACKS:mul_(#IN_PACK)):sub_1:#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#PACKS:mul_(#IN_PACK)):add_4:#R]>:<[NUM:value=(#PACKS:sub_2):mul_(#IN_PACK):#R]>]",
+                "[IF:(#W)=0:<[NUM:value=(#PACKS:mul_(#IN_PACK)):sub_4:#R]>:<[NUM:value=(#PACKS:mul_(#IN_PACK)):add_(#IN_PACK):#R]>]",
+                "[IF:(#W)=0:<הכפל את כמות המארזים בכמות שיש בכל מארז.>:<חסר מארז אחד מסך המארזים, ואז הכפל בכמות שיש בפנים.>]"
+        });
         // הרצה של המנוע
         System.out.println("--- מריץ ייצור שאלות ---");
 
-        for (int i = 0; i < templates.size(); i++) {
+        for (int i = 0; i < newTemplates.size(); i++) {
             memory = new HashMap<>(); // זיכרון נקי לכל שאלה
-            String[] pair = templates.get(i);
+            String[] pair = newTemplates.get(i);
 
-            String question = MathQuestionGenerator.gene(pair[0], memory);
-            String answer = MathQuestionGenerator.gene(pair[1], memory);
+            String question = questionEngine.evaluateTemplate(pair[0], memory);
+            String answer = questionEngine.evaluateTemplate(pair[1], memory);
+            String w1answer = questionEngine.evaluateTemplate(pair[2], memory);
+            String w2answer = questionEngine.evaluateTemplate(pair[3], memory);
+            String w3answer = questionEngine.evaluateTemplate(pair[4], memory);
+            String hint = questionEngine.evaluateTemplate(pair[5], memory);
 
             System.out.println("שאלה " + (i+1) + ": " + question);
             System.out.println("תשובה נכונה: " + answer);
+            System.out.println("תשובה שגויה 1 : " + w1answer);
+            System.out.println("תשובה שגויה 2 : " + w2answer);
+            System.out.println("תשובה שגויה 3 : " + w3answer);
+            System.out.println("רמז : " + hint);
             System.out.println("-------------------------");
         }
     }

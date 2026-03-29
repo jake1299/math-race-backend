@@ -12,7 +12,7 @@
   },
   {
     "id": "easy_math_2",
-    "questionTemplate": "[ITEM:unit_type=COUNT:*:#2][UNIT:type=COUNT;item_category=(#2:t):*:#U][NUM:min=0;max=1:*:#W][HUMAN:#1] [VERB:id=arrange;t=past;g=(#1:g);num=s] [NUM:min=3;max=6:#X] [#U:p] של [#2:p]. בכל [#U:s] יש [NUM:min=4;max=7:#Y] [#2:p]. [IF:(#W)=0:<כמה [#2:p] סך הכל יש ב-[#X] ה[#U:p]?>:<אם [#1:n] [VERB:id=add;t=future;g=(#1:g);num=s] עוד [#U:s] [HUMAN:g=(#U:g):one], כמה [#2:p] יהיו סך הכל?>]",
+    "questionTemplate": "[ITEM:unit_type=COUNT:*:#2][UNIT:type=COUNT;item_category=(#2:t):*:#U][NUM:min=0;max=1:*:#W][HUMAN:#1] [VERB:id=arrange;t=past;g=(#1:g);num=s] [NUM:min=3;max=6:#X] [#U:p] של [#2:p]. בכל [#U:s] יש [NUM:min=4;max=7:#Y] [#2:p]. [IF:(#W)=0:<כמה [#2:p] סך הכל יש ב-[#X] ה[#U:p]?>:<אם [#1:n] [VERB:id=add;t=future;g=(#1:g);num=s] עוד [#U:s] [#U:one], כמה [#2:p] יהיו סך הכל?>]",
     "answerTemplate": "[IF:(#W)=0:<[NUM:value=(#X:mul_(#Y)):#R]>:<[NUM:value=(#Y:mul_(#X:add_1)):#R]>]",
     "hintTemplate": "כדי למצוא את הסך הכל, עליך להכפיל את מספר ה[#U:p] במספר ה[#2:p] שיש בכל [#U:s].",
     "distractorsTemplates": [

@@ -26,7 +26,7 @@ public class TagInfo {
 
 
     public static TagInfo parse(String tag) {
-        String clean = tag.substring(1, tag.length() - 1);
+        String clean = tag.trim().substring(1, tag.length() - 1);
         List<String> parts = smartSplit(clean, ':');
 
         String type = parts.get(0).trim();
@@ -78,7 +78,7 @@ public class TagInfo {
         }
     }
 
-    private static List<String> smartSplit(String s, char delimiter) {
+    public static List<String> smartSplit(String s, char delimiter) {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         int depth = 0; // מונה את עומק הסוגריים

@@ -1,6 +1,7 @@
 package com.example.math_race.questionGenerator.tags.types;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 import com.example.math_race.questionGenerator.tags.enums.RoleType;
 
 import java.util.Arrays;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RoleTag implements QuestionEntity {
+public class RoleTag implements MatchableTag {
     private String id;
     private String singularMale;
     private String pluralMale;
@@ -53,7 +54,6 @@ public class RoleTag implements QuestionEntity {
 
     public boolean matches(Map<String, String> constraints) {
 
-        // 1. סינון לפי ID (תמיכה ב-OR ובשלילה)
         if (constraints.containsKey("id") && !constraints.get("id").equals("?")) {
             String req = constraints.get("id").trim();
             boolean isNot = req.startsWith("!");
@@ -71,7 +71,6 @@ public class RoleTag implements QuestionEntity {
             if (isNot == foundMatch) return false;
         }
 
-        // 2. סינון לפי RoleType (תמיכה ב-OR ובשלילה)
         if (constraints.containsKey("role_type") && !constraints.get("role_type").equals("?")) {
             String req = constraints.get("role_type").trim().toUpperCase();
             boolean isNot = req.startsWith("!");
@@ -89,7 +88,6 @@ public class RoleTag implements QuestionEntity {
             if (isNot == foundMatch) return false;
         }
 
-        // 3. סינון לפי validPlaceIds / place_id (תמיכה ב-AND, OR ובשלילה)
         if (constraints.containsKey("place_id") && !constraints.get("place_id").equals("?")) {
             String rawExpr = constraints.get("place_id").trim();
             boolean isNegated = rawExpr.startsWith("!");
@@ -106,7 +104,6 @@ public class RoleTag implements QuestionEntity {
                 boolean allInGroupMatch = true;
 
                 for (String req : andRequirements) {
-                    // כאן בודקים מול ה-Set של המקומות המורשים
                     if (!this.validPlaceIds.contains(req.trim())) {
                         allInGroupMatch = false;
                         break;

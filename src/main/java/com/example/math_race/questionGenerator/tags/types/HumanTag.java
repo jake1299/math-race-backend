@@ -1,6 +1,7 @@
 package com.example.math_race.questionGenerator.tags.types;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 import com.example.math_race.questionGenerator.tags.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +13,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class HumanTag implements QuestionEntity {
+public class HumanTag implements MatchableTag {
     private String name;
     private Gender gender;
 
@@ -50,17 +51,18 @@ public class HumanTag implements QuestionEntity {
 
     public boolean matches(Map<String, String> constraints) {
         if (constraints.containsKey("g") && !constraints.get("g").equals("?")) {
-            String reqGender = constraints.get("g").trim().toLowerCase();
+            String reqGender = constraints.get("g").trim().toUpperCase();
 
             if (reqGender.startsWith("!")) {
                 String excludedGender = reqGender.substring(1);
 
-                if ((excludedGender.equals("m") || excludedGender.equals("male")) && this.gender == Gender.MALE) return false;
-                if ((excludedGender.equals("f") || excludedGender.equals("female")) && this.gender == Gender.FEMALE) return false;
+                if ((excludedGender.equals("M") || excludedGender.equals("MALE")) && this.gender == Gender.MALE) return false;
+                if ((excludedGender.equals("M") || excludedGender.equals("FEMALE")) && this.gender == Gender.FEMALE) return false;
+
             } else {
 
-                if ((reqGender.equals("m") || reqGender.equals("male")) && this.gender != Gender.MALE) return false;
-                if ((reqGender.equals("f") || reqGender.equals("female")) && this.gender != Gender.FEMALE) return false;
+                if ((reqGender.equals("M") || reqGender.equals("MALE")) && this.gender == Gender.MALE) return false;
+                if ((reqGender.equals("F") || reqGender.equals("FEMALE")) && this.gender == Gender.FEMALE) return false;
             }
         }
 

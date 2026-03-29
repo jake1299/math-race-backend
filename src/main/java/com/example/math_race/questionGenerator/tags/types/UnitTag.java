@@ -1,6 +1,6 @@
 package com.example.math_race.questionGenerator.tags.types;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
 import com.example.math_race.questionGenerator.tags.enums.Gender;
 import com.example.math_race.questionGenerator.tags.enums.ItemCategory;
 import com.example.math_race.questionGenerator.tags.enums.UnitType;
@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class UnitTag implements QuestionEntity {
+public class UnitTag implements MatchableTag {
     private String id;
     private String singular;
     private String plural;
@@ -39,6 +39,10 @@ public class UnitTag implements QuestionEntity {
 
         if ("id".equalsIgnoreCase(key)) {
             return id;
+        }
+
+        if ("one".equals(key)) {
+            return gender == Gender.MALE ? "אחד" : "אחת";
         }
 
         if ("vic".equalsIgnoreCase(key) | "valid_IC".equalsIgnoreCase(key)) {

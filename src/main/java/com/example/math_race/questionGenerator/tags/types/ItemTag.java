@@ -1,6 +1,7 @@
 package com.example.math_race.questionGenerator.tags.types;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 import com.example.math_race.questionGenerator.tags.enums.Gender;
 import com.example.math_race.questionGenerator.tags.enums.ItemCategory;
 import com.example.math_race.questionGenerator.tags.enums.UnitType;
@@ -16,7 +17,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemTag implements QuestionEntity {
+public class ItemTag implements MatchableTag {
     private String singular;
     private String plural;
     private Gender gender;
@@ -158,12 +159,12 @@ public class ItemTag implements QuestionEntity {
         }
 
         if (constraints.containsKey("g") && !constraints.get("g").equals("?")) {
-            String reqGender = constraints.get("g").trim().toLowerCase();
+            String reqGender = constraints.get("g").trim().toUpperCase();
             boolean isNot = reqGender.startsWith("!");
             String genderVal = isNot ? reqGender.substring(1) : reqGender;
 
-            boolean isMaleMatch = (genderVal.equals("m") || genderVal.equals("male")) && this.gender == Gender.MALE;
-            boolean isFemaleMatch = (genderVal.equals("f") || genderVal.equals("female")) && this.gender == Gender.FEMALE;
+            boolean isMaleMatch = (genderVal.equals("M") || genderVal.equals("MALE")) && this.gender == Gender.MALE;
+            boolean isFemaleMatch = (genderVal.equals("F") || genderVal.equals("FEMALE")) && this.gender == Gender.FEMALE;
 
             if (isNot) {
                 if (isMaleMatch || isFemaleMatch) return false;

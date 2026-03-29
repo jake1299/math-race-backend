@@ -1,6 +1,7 @@
 package com.example.math_race.questionGenerator.tags.types;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 import com.example.math_race.questionGenerator.tags.enums.Gender;
 import com.example.math_race.questionGenerator.tags.enums.ItemCategory;
 import com.example.math_race.questionGenerator.tags.enums.PlaceType;
@@ -13,7 +14,7 @@ import java.util.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PlaceTag implements QuestionEntity {
+public class PlaceTag implements MatchableTag {
     private String id;
     private String singular;
     private String plural;

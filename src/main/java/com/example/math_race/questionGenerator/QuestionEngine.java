@@ -1,9 +1,11 @@
 package com.example.math_race.questionGenerator;
 
-import com.example.math_race.questionGenerator.tags.core.QuestionEntity;
+import com.example.math_race.questionGenerator.tags.core.MatchableTag;
+import com.example.math_race.questionGenerator.tags.core.TemplateTag;
 import com.example.math_race.questionGenerator.tags.core.TagInfo;
 import com.example.math_race.questionGenerator.tags.types.*;
 import com.example.math_race.race.questions.MathQuestion;
+import com.example.math_race.race.questions.MathQuestionGenerator;
 import com.example.math_race.repositories.DictionaryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static com.example.math_race.questionGenerator.tags.core.TagInfo.smartSplit;
 
 @Component
 public class QuestionEngine {
@@ -43,8 +47,25 @@ public class QuestionEngine {
         System.out.println("✅ QuestionEngine: Dictionary loaded successfully to memory!");
     }
 
+    public void fill() {
+        this.humans = MathQuestionGenerator.fillHumans();
+        this.items = MathQuestionGenerator.fillItems();
+        this.verbs = MathQuestionGenerator.fillVerbs();
+        this.places = MathQuestionGenerator.fillPlaces();
+        this.adjectives = MathQuestionGenerator.fillAdjectives();
+        this.units = MathQuestionGenerator.fillUnits();
+        this.roles = MathQuestionGenerator.fillRoles();
+
+        System.out.println("✅ QuestionEngine: Dictionary loaded successfully to memory!");
+    }
+
+    public QuestionEngine(){
+        fill();
+        this.dictionaryRepository = null;
+    }
+
     public MathQuestion processTemplate(QuestionTemplate questionTemplate) {
-        Map<String, QuestionEntity> memory = new HashMap<>();
+        Map<String, TemplateTag> memory = new HashMap<>();
 
         String questionText = evaluateTemplate(questionTemplate.questionTemplate(), memory);
         String correctAnswer = evaluateTemplate(questionTemplate.answerTemplate(), memory);
@@ -55,24 +76,17 @@ public class QuestionEngine {
         if (questionTemplate.distractorsTemplates() != null) {
             for (String distractor : questionTemplate.distractorsTemplates()) {
 
-                // לבדוק זאת
-
                 String distractorValue = evaluateTemplate(distractor, memory);
-
-                // --- מנגנון חכם למניעת כפילויות בתשובות (Anti-Collision) ---
                 while (options.contains(distractorValue)) {
                     try {
-                        // אם המספר הזה כבר קיים, נוסיף לו 1 כדי ליצור מסיח קרוב אך שונה
                         int val = Integer.parseInt(distractorValue);
                         distractorValue = String.valueOf(val + 1);
                     } catch (NumberFormatException e) {
-                        // אם במקרה מדובר בטקסט שחוזר על עצמו, נוסיף לו סימן כדי לשנות אותו
                         distractorValue = distractorValue + " ";
                         break;
                     }
                 }
 
-                // התיקון: מוסיפים את המשתנה המתוקן, ולא קוראים לפונקציה מחדש!
                 options.add(distractorValue);
             }
         }
@@ -106,7 +120,7 @@ public class QuestionEngine {
         return mathQuestion;
     }
 
-    private String evaluateTemplate(String template, Map<String, QuestionEntity> memory) {
+    public String evaluateTemplate(String template, Map<String, TemplateTag> memory) {
         Set<String> tags = extractUniqueTags(template);
 
         if (memory == null) {
@@ -129,16 +143,16 @@ public class QuestionEngine {
                     resolvedConstraints.put(entry.getKey(), resolveValue(entry.getValue(), memory));
                 }
 
-                QuestionEntity chosen = switch (info.getType()) {
-                    case "HUMAN" -> findHuman(resolvedConstraints);
-                    case "ITEM" -> findItem(resolvedConstraints);
+                TemplateTag chosen = switch (info.getType()) {
+                    case "HUMAN" -> getRandomMatch(humans,resolvedConstraints, HumanTag.class);
+                    case "ITEM" -> getRandomMatch(items,resolvedConstraints, ItemTag.class);
                     case "NUM" -> findNumber(resolvedConstraints);
-                    case "VERB" -> findVerb(resolvedConstraints);
-                    case "PLACE" -> findPlace(resolvedConstraints);
-                    case "ADJ" -> findAdjective(resolvedConstraints);
-                    case "UNIT" -> findUnit(resolvedConstraints);
+                    case "VERB" -> getRandomMatch(verbs,resolvedConstraints, VerbTag.class);
+                    case "PLACE" -> getRandomMatch(places,resolvedConstraints, PlaceTag.class);
+                    case "ADJ" -> getRandomMatch(adjectives,resolvedConstraints, AdjectiveTag.class);
+                    case "UNIT" -> getRandomMatch(units,resolvedConstraints, UnitTag.class);
                     case "TIME" -> findTime(resolvedConstraints);
-                    case "ROLE" -> findRole(resolvedConstraints);
+                    case "ROLE" -> getRandomMatch(roles,resolvedConstraints, RoleTag.class);
                     default -> null;
                 };
 
@@ -189,62 +203,61 @@ public class QuestionEngine {
         return tags;
     }
 
-    private String resolveValue(String value, Map<String, QuestionEntity> memory) {
+    private String resolveValue(String value, Map<String, TemplateTag> memory) {
         if (value == null || value.isEmpty()) {
             return value;
         }
 
-        boolean isNot = false;
         String expression = value.trim();
+        boolean isNot = false;
 
-        if (expression.startsWith("!(") && expression.endsWith(")")) {
+        if (expression.startsWith("!") && isFullyWrappedByParentheses(expression.substring(1))) {
             isNot = true;
             expression = expression.substring(2, expression.length() - 1);
-        } else if (expression.startsWith("(") && expression.endsWith(")")) {
+        } else if (isFullyWrappedByParentheses(expression)) {
             expression = expression.substring(1, expression.length() - 1);
         } else {
             return value;
         }
 
-        String[] parts = expression.split(":", 2);
-        String id = parts[0];
-        String property = (parts.length > 1) ? parts[1] : "";
+        List<String> plusSplit = smartSplit(expression, '+');
 
-
-        if (memory.containsKey(id)) {
-            String newProperty = splitBeforeAndWithinParentheses(property);
-            String[] splitNewProperty;
-
-            if (newProperty != null) {
-                splitNewProperty = newProperty.split(":",2);
-                property = splitNewProperty[0] + resolveValue(splitNewProperty[1], memory);
+        if (plusSplit.size() > 1) {
+            StringBuilder combinedResult = new StringBuilder();
+            for (String part : plusSplit) {
+                combinedResult.append(resolveValue(part.trim(), memory));
             }
-
-            String resolvedValue = memory.get(id).getProperty(property);
-            return isNot ? "!" + resolvedValue : resolvedValue;
+            return isNot ? "!" + combinedResult.toString() : combinedResult.toString();
         }
 
-        return value;
+        String resolvedSingle = resolveValue(plusSplit.get(0).trim(), memory);
+
+        if (resolvedSingle.startsWith("#")) {
+            String[] parts = resolvedSingle.split(":", 2);
+            String id = parts[0].trim();
+            String property = (parts.length > 1) ? parts[1].trim() : "";
+
+            if (memory.containsKey(id)) {
+
+                String[] splitNewProperty = splitBeforeAndWithinParentheses(property);
+                if (splitNewProperty != null) {
+
+                    property = splitNewProperty[0] + resolveValue(splitNewProperty[1], memory);
+                }
+
+                String finalValue = memory.get(id).getProperty(property);
+                if (finalValue == null) finalValue = "";
+
+                return isNot ? "!" + finalValue : finalValue;
+            } else {
+                System.out.println("the id : " + id + " does not exist in the memory");
+            }
+        }
+
+        return isNot ? "!" + resolvedSingle : resolvedSingle;
     }
 
-    private String splitBeforeAndWithinParentheses(String str) {
-        if (str == null || !str.endsWith(")")) {
-            return null;
-        }
-
-        int firstOpen = str.indexOf('(');
-
-        if (firstOpen == -1) {
-            return null;
-        }
-
-        String x = str.substring(0, firstOpen);
-        String y = str.substring(firstOpen);
-
-        return x + ":" + y;
-    }
-
-    private String processIfTag(String tag, String result, Map<String, QuestionEntity> memory){
+    private String processIfTag(String tag, String result, Map<String, TemplateTag> memory){
         try {
             int originalCondEnd = tag.indexOf(":<");
             if (originalCondEnd == -1) return result;
@@ -287,63 +300,37 @@ public class QuestionEngine {
             String trueOption = currentTag.substring(currentCondEnd + 2, branchSplit);
             String falseOption = currentTag.substring(branchSplit + 3, currentTag.length() - 2);
 
-            String operator = "";
-            if (conditionFromTag.contains(">=")) operator = ">=";
-            else if (conditionFromTag.contains("<=")) operator = "<=";
-            else if (conditionFromTag.contains("!=")) operator = "!=";
-            else if (conditionFromTag.contains(">")) operator = ">";
-            else if (conditionFromTag.contains("<")) operator = "<";
-            else if (conditionFromTag.contains("=")) operator = "=";
+            String[] opInfo = findMainOperator(conditionFromTag);
 
-            if (!operator.isEmpty()) {
-                int opIndex = conditionFromTag.indexOf(operator);
+            if (opInfo != null && opInfo.length == 2) {
+
+                String operator =  opInfo[0];
+                int opIndex =  Integer.parseInt(opInfo[1]);
+
                 String leftSide = conditionFromTag.substring(0, opIndex).trim();
-                String expectedStr = conditionFromTag.substring(opIndex + operator.length()).trim();
+                leftSide = resolveValue(leftSide,memory);
 
-                expectedStr = expectedStr.startsWith("(") ? resolveValue(expectedStr,memory) : expectedStr;
-
-                String actualStr = "";
-
-                if (leftSide.startsWith("(")) {
-                    actualStr = resolveValue(leftSide, memory);
-                } else {
-                    String entityId = leftSide;
-                    String propertyKey = "";
-
-                    if (leftSide.contains(":")) {
-                        String[] varParts = leftSide.split(":", 2);
-                        entityId = varParts[0].trim();
-                        propertyKey = varParts[1].trim();
-                    }
-
-                    if (memory.containsKey(entityId)) {
-                        actualStr = memory.get(entityId).getProperty(propertyKey);
-                    } else {
-                        actualStr = leftSide;
-                    }
-                }
-
-                actualStr = actualStr != null ? actualStr : "";
-                expectedStr = expectedStr != null ? expectedStr : "";
+                String rightSide = conditionFromTag.substring(opIndex + operator.length()).trim();
+                rightSide = resolveValue(rightSide,memory);
 
                 boolean conditionMet = false;
                 if (operator.equals("=")) {
-                    conditionMet = actualStr.equals(expectedStr);
+                    conditionMet = leftSide.equals(rightSide);
                 } else if (operator.equals("!=")) {
-                    conditionMet = !actualStr.equals(expectedStr);
+                    conditionMet = !leftSide.equals(rightSide);
                 } else {
                     try {
-                        double actualNum = Double.parseDouble(actualStr);
-                        double expectedNum = Double.parseDouble(expectedStr);
+                        double actualNum = Double.parseDouble(leftSide);
+                        double expectedNum = Double.parseDouble(rightSide);
                         conditionMet = switch (operator) {
                             case ">" -> actualNum > expectedNum;
                             case "<" -> actualNum < expectedNum;
                             case ">=" -> actualNum >= expectedNum;
                             case "<=" -> actualNum <= expectedNum;
-                            default -> conditionMet;
+                            default -> false;
                         };
                     } catch (NumberFormatException nfe) {
-                        System.out.println("Warning: Numeric comparison failed for actual: [" + actualStr + "] and expected: [" + expectedStr + "]");
+                        System.out.println("Warning: Numeric comparison failed for actual: [" + leftSide + "] and expected: [" + rightSide + "]");
                     }
                 }
 
@@ -359,60 +346,14 @@ public class QuestionEngine {
         return result;
     }
 
-    private HumanTag findHuman(Map<String, String> constraints) {
-        List<HumanTag> matches = humans.stream()
-                .filter(h -> h.matches(constraints))
+
+    private <T extends MatchableTag> T getRandomMatch(List<T> dataList, Map<String, String> constraints, Class<T> clazz) {
+        List<T> matches = dataList.stream()
+                .filter(item -> item.matches(constraints))
                 .toList();
 
         if (matches.isEmpty()) {
-            System.out.println("Warning: No human matches constraints: " + constraints);
-            return null;
-        }
-
-        return matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
-    }
-
-    private QuestionEntity findAdjective(Map<String, String> constraints) {
-        List<AdjectiveTag> matches = adjectives.stream()
-                .filter(a -> a.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No adjective matches constraints: " + constraints);
-            return null;
-        }
-
-        AdjectiveTag chosenAdjective = matches.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(matches.size()));
-
-        String g = constraints.getOrDefault("g", "MALE").toUpperCase();
-        String num = constraints.getOrDefault("num", "s").toLowerCase();
-
-        String exactWord = chosenAdjective.getWord(g, num);
-
-        return key -> exactWord;
-    }
-
-    private ItemTag findItem(Map<String, String> constraints) {
-        List<ItemTag> matches = items.stream()
-                .filter(h -> h.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No item matches constraints: " + constraints);
-            return null;
-        }
-
-        return matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
-    }
-
-
-    private PlaceTag findPlace(Map<String, String> constraints) {
-        List<PlaceTag> matches = places.stream()
-                .filter(p -> p.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No place matches constraints: " + constraints);
+            System.out.println("Warning: No " + clazz.getSimpleName() + " matches constraints: " + constraints);
             return null;
         }
 
@@ -420,69 +361,45 @@ public class QuestionEngine {
     }
 
     private NumberTag findNumber(Map<String, String> constraints) {
-        int min, max;
-        try {
-            min = Integer.parseInt(constraints.getOrDefault("min", "1").trim());
-            max = Integer.parseInt(constraints.getOrDefault("max", "100").trim());
+        int min = 1;
+        int max = 100;
 
-            if (min > max) {
-                int temp = min;
-                min = max;
-                max = temp;
-            }
-        } catch (NumberFormatException e) {
-            min = 1;
-            max = 100;
+        String minStr = constraints.get("min");
+        if (minStr != null && !minStr.trim().equals("?")) {
+            try { min = Integer.parseInt(minStr.trim()); }
+            catch (NumberFormatException e) { System.out.println("Warning: Invalid min format."); }
         }
 
-        if (constraints.containsKey("value") && !constraints.get("value").equals("?")) {
-            String valStr = constraints.get("value").trim();
-
-            if (valStr.startsWith("!")) {
-                try {
-                    int forbiddenValue = Integer.parseInt(valStr.substring(1));
-
-                    if (min == max && min == forbiddenValue) {
-                        return new NumberTag(min);
-                    }
-
-                    int randomNumber;
-                    do {
-                        randomNumber = java.util.concurrent.ThreadLocalRandom.current().nextInt(min, max + 1);
-                    } while (randomNumber == forbiddenValue);
-
-                    return new NumberTag(randomNumber);
-                } catch (NumberFormatException e) {
-                    System.out.println("Warning: Invalid value: " + valStr);
-                }
-            }
-
-            else {
-                try {
-                    return new NumberTag(Integer.parseInt(valStr));
-                } catch (NumberFormatException e) {
-                    System.out.println("Warning: Invalid value for number: " + valStr);
-                }
-            }
+        String maxStr = constraints.get("max");
+        if (maxStr != null && !maxStr.trim().equals("?")) {
+            try { max = Integer.parseInt(maxStr.trim()); }
+            catch (NumberFormatException e) { System.out.println("Warning: Invalid max format."); }
         }
 
-        int randomNumber = java.util.concurrent.ThreadLocalRandom.current().nextInt(min, max + 1);
-        return new NumberTag(randomNumber);
+        if (min > max) {
+            int temp = min;
+            min = max;
+            max = temp;
+        }
+
+        String valStr = constraints.getOrDefault("value", "?").trim();
+        return new NumberTag(valStr, min, max);
     }
 
     private TimeTag findTime(Map<String, String> constraints) {
-        int minMinutes = 0;
-        int maxMinutes = 1439;
+        int minMinutes = 0;    // 00:00
+        int maxMinutes = 1439; // 23:59
 
-        try {
-            if (constraints.containsKey("min") && !constraints.get("min").equals("?")) {
-                minMinutes = parseTime(constraints.get("min"));
-            }
-            if (constraints.containsKey("max") && !constraints.get("max").equals("?")) {
-                maxMinutes = parseTime(constraints.get("max"));
-            }
-        } catch (Exception e) {
-            System.out.println("Warning: Invalid time format in min/max constraints");
+        String minStr = constraints.get("min");
+        if (minStr != null && !minStr.trim().equals("?")) {
+            try { minMinutes = TimeTag.parseTime(minStr.trim()); }
+            catch (Exception e) { System.out.println("Warning: Invalid min time format."); }
+        }
+
+        String maxStr = constraints.get("max");
+        if (maxStr != null && !maxStr.trim().equals("?")) {
+            try { maxMinutes = TimeTag.parseTime(maxStr.trim()); }
+            catch (Exception e) { System.out.println("Warning: Invalid max time format."); }
         }
 
         if (minMinutes > maxMinutes) {
@@ -492,117 +409,63 @@ public class QuestionEngine {
         }
 
         boolean round = !constraints.getOrDefault("round", "true").equalsIgnoreCase("false");
+        String valStr = constraints.getOrDefault("value", "?").trim();
 
-        if (constraints.containsKey("value") && !constraints.get("value").equals("?")) {
-            String valStr = constraints.get("value").trim();
+        return new TimeTag(valStr, minMinutes, maxMinutes, round);
+    }
 
-            if (valStr.startsWith("!")) {
-                try {
-                    int forbiddenValue = parseTime(valStr.substring(1));
+    private static boolean isFullyWrappedByParentheses(String s) {
+        if (s == null || s.length() < 2) return false;
+        if (s.charAt(0) != '(' || s.charAt(s.length() - 1) != ')') return false;
 
-                    if (minMinutes == maxMinutes && minMinutes == forbiddenValue) {
-                        return new TimeTag(minMinutes);
+        int depth = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '(') depth++;
+            else if (c == ')') depth--;
+
+            if (depth == 0 && i < s.length() - 1) {
+                return false;
+            }
+        }
+        return depth == 0;
+    }
+
+    private static String[] splitBeforeAndWithinParentheses(String str) {
+        if (str == null || !str.endsWith(")")) {
+            return null;
+        }
+
+        int firstOpen = str.indexOf('(');
+
+        if (firstOpen == -1) {
+            return null;
+        }
+
+        String x = str.substring(0, firstOpen);
+        String y = str.substring(firstOpen);
+
+        return new String[]{x, y};
+    }
+
+    private static String[] findMainOperator(String condition) {
+        String[] operators = {">=", "<=", "!=", ">", "<", "="};
+        int depth = 0;
+
+        for (int i = 0; i < condition.length(); i++) {
+            char c = condition.charAt(i);
+
+            if (c == '(') depth++;
+            else if (c == ')') depth--;
+
+            if (depth == 0) {
+                for (String op : operators) {
+                    if (condition.startsWith(op, i)) {
+                        return new String[]{op, String.valueOf(i)};
                     }
-
-                    int randomMinutes;
-                    int attempts = 0;
-
-                    do {
-                        randomMinutes = java.util.concurrent.ThreadLocalRandom.current().nextInt(minMinutes, maxMinutes + 1);
-
-                        if (round) {
-                            randomMinutes = Math.round(randomMinutes / 5.0f) * 5;
-                            if (randomMinutes > maxMinutes) randomMinutes = maxMinutes;
-                            if (randomMinutes < minMinutes) randomMinutes = minMinutes;
-                        }
-
-                        attempts++;
-                        if (attempts > 100) break;
-
-                    } while (randomMinutes == forbiddenValue);
-
-                    return new TimeTag(randomMinutes);
-
-                } catch (Exception e) {
-                    System.out.println("Warning: Invalid time format for forbidden value: " + valStr);
-                }
-            }
-            else {
-                try {
-                    return new TimeTag(parseTime(valStr));
-                } catch (Exception e) {
-                    System.out.println("Warning: Invalid time format for specific value: " + valStr);
                 }
             }
         }
-
-        int randomMinutes = java.util.concurrent.ThreadLocalRandom.current().nextInt(minMinutes, maxMinutes + 1);
-
-        if (round) {
-            randomMinutes = Math.round(randomMinutes / 5.0f) * 5;
-            if (randomMinutes > maxMinutes) randomMinutes = maxMinutes;
-            if (randomMinutes < minMinutes) randomMinutes = minMinutes;
-        }
-
-        return new TimeTag(randomMinutes);
-    }
-
-    private static int parseTime(String timeStr) {
-        String[] parts = timeStr.trim().split("[:.]");
-        int h = Integer.parseInt(parts[0]);
-        int m = Integer.parseInt(parts[1]);
-        return h * 60 + m;
-    }
-
-    private QuestionEntity findVerb(Map<String, String> constraints) {
-        List<VerbTag> matches = verbs.stream()
-                .filter(v -> v.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No verb matches constraints: " + constraints);
-            return null;
-        }
-
-        VerbTag chosenVerb = matches.get(ThreadLocalRandom.current().nextInt(matches.size()));
-
-        String f = constraints.getOrDefault("f", "regular").toLowerCase();
-        String t = constraints.getOrDefault("t", "past").toLowerCase();
-        String g = constraints.getOrDefault("g", "MALE").toUpperCase();
-        String num = constraints.getOrDefault("num", "s").toLowerCase();
-
-        if (f.equals("inf")) {
-            return key -> chosenVerb.getWord("inf", "ANY", "ANY");
-        }
-
-        String exactWord = chosenVerb.getWord(t, g, num);
-
-        return key -> exactWord;
-    }
-
-    private QuestionEntity findUnit(Map<String, String> constraints) {
-        List<UnitTag> matches = units.stream()
-                .filter(u -> u.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No unit matches constraints: " + constraints);
-            return null;
-        }
-
-        return matches.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(matches.size()));
-    }
-
-    private QuestionEntity findRole(Map<String, String> constraints) {
-        List<RoleTag> matches = roles.stream()
-                .filter(r -> r.matches(constraints))
-                .toList();
-
-        if (matches.isEmpty()) {
-            System.out.println("Warning: No role matches constraints: " + constraints);
-            return null;
-        }
-
-        return matches.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(matches.size()));
+        return null;
     }
 }
