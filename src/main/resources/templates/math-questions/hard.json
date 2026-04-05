@@ -1,13 +1,13 @@
 [
   {
     "id": "hard_logic_1",
-    "questionTemplate": "[PLACE:place_type=EDUCATION...]",
-    "answerTemplate": "[IF:(#W)=0:<[NUM:value=(#X:mul_15):#R]>:<[TIME:value=(#T1:add_m_20):#R]>]",
-    "hintTemplate": "שים לב לשעת ההתחלה ([#T1]) ולקצב סידור ה[#2:p] בדקה.",
+    "questionTemplate": "[PLACE:place_type=HOME|EDUCATION:*:#P1][HUMAN:*:#1][NUM:min=4;max=9:*:#WINS][NUM:min=10;max=15:*:#PTS_WIN][NUM:min=2;max=5:*:#LOSSES][NUM:min=3;max=8:*:#PTS_LOSS][NUM:value=(#WINS:mul_(#PTS_WIN)):*:#TOTAL_WIN][NUM:value=(#LOSSES:mul_(#PTS_LOSS)):*:#TOTAL_LOSS][NUM:min=0;max=1:*:#W][#1:n] [VERB:id=play:(present_+(#1:g)+_s):#V1] במשחק תחרותי ב[#P1:s]. על כל ניצחון מקבלים [#PTS_WIN] נקודות, ועל כל הפסד יורדות [#PTS_LOSS] נקודות. [IF:(#W)=0:<אם [#1:he_she] [VERB:id=win:(past_+(#1:g)+_s):#V2] ב-[#WINS] שלבים ו[VERB:id=lose_game:(past_+(#1:g)+_s):#V4] בשלב אחד, כמה נקודות יש [#1:to_him_her]?>:<אם [#1:he_she] [VERB:id=win:(past_+(#1:g)+_s):#V3] ב-[#WINS] שלבים ו[VERB:id=lose_game:(past_+(#1:g)+_s):#V5] ב-[#LOSSES] שלבים, כמה נקודות יש [#1:to_him_her]?>]",
+    "answerTemplate": "[IF:(#W)=0:<[NUM:value=(#TOTAL_WIN:sub_(#PTS_LOSS)):#R]>:<[NUM:value=(#TOTAL_WIN:sub_(#TOTAL_LOSS)):#R]>]",
+    "hintTemplate": "[IF:(#W)=0:<חשב את נקודות הניצחון (כפל), וחסר מהן את הנקודות של הפסד אחד.>:<חשב את נקודות הניצחון, חשב את נקודות ההפסד (כפל נוסף), וחסר ביניהם.>]",
     "distractorsTemplates": [
-      "[IF:(#W)=0:<[NUM:value=(#X:mul_10)]>:<[TIME:value=(#T1:add_m_10)]>]",
-      "[IF:(#W)=0:<[NUM:value=(#X:mul_20)]>:<[TIME:value=(#T1:add_m_30)]>]",
-      "[IF:(#W)=0:<[NUM:value=(#X:mul_5)]>:<[TIME:value=(#T1:add_m_40)]>]"
+      "[IF:(#W)=0:<[NUM:value=(#TOTAL_WIN:add_(#PTS_LOSS)):#R]>:<[NUM:value=(#TOTAL_WIN:add_(#TOTAL_LOSS)):#R]>]",
+      "[NUM:value=(#TOTAL_WIN):#R]",
+      "[IF:(#W)=0:<[NUM:value=(#WINS:sub_(#PTS_LOSS)):#R]>:<[NUM:value=(#TOTAL_WIN:sub_(#LOSSES)):#R]>]"
     ]
   }
 ]

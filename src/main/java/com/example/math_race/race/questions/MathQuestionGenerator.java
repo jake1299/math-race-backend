@@ -530,63 +530,62 @@ public class MathQuestionGenerator {
         Set<UnitType> noUnit = Set.of(UnitType.NONE);
 
         // --- מזון ושתייה ---
-        items.add(new ItemTag("תפוח", "תפוחים", MALE, weightOrCount, ItemCategory.PRODUCE));
-        items.add(new ItemTag("עגבנייה", "עגבניות", FEMALE, weightOrCount, ItemCategory.PRODUCE));
-        items.add(new ItemTag("לחם", "כיכרות לחם", MALE, countOnly, ItemCategory.BAKED_GOODS));
-        items.add(new ItemTag("קרואסון", "קרואסונים", MALE, countOnly, ItemCategory.BAKED_GOODS));
-        items.add(new ItemTag("מים", "בקבוקי מים", MALE, volumeOrCount, ItemCategory.DRINKS));
-        items.add(new ItemTag("סוכרייה", "סוכריות", FEMALE, weightOrCount, ItemCategory.SWEETS));
-        items.add(new ItemTag("פופקורן", "פופקורן", MALE, weightOrCount, ItemCategory.SWEETS));
-        items.add(new ItemTag("קמח", "שקי קמח", MALE, weightOnly, ItemCategory.GENERAL_FOOD));
+        items.add(new ItemTag("apple", "תפוח", "תפוחים", MALE, weightOrCount, ItemCategory.PRODUCE));
+        items.add(new ItemTag("tomato", "עגבנייה", "עגבניות", FEMALE, weightOrCount, ItemCategory.PRODUCE));
+        items.add(new ItemTag("bread_loaf", "כיכר לחם", "כיכרות לחם", MALE, countOnly, ItemCategory.BAKED_GOODS));
+        items.add(new ItemTag("croissant", "קרואסון", "קרואסונים", MALE, countOnly, ItemCategory.BAKED_GOODS));
+        items.add(new ItemTag("water", "מים", "מים", MALE, volumeOrCount, ItemCategory.DRINKS));
+        items.add(new ItemTag("candy", "סוכרייה", "סוכריות", FEMALE, weightOrCount, ItemCategory.SWEETS));
+        items.add(new ItemTag("popcorn_bag", "שקית פופקורן", "שקיות פופקורן", MALE, weightOrCount, ItemCategory.SWEETS));
+        items.add(new ItemTag("flour_bag", "שק קמח", "שקי קמח", MALE, weightOnly, ItemCategory.GENERAL_FOOD));
 
-        // --- ART SUPPLIES (יצירה - חדש!) ---
-        items.add(new ItemTag("מכחול", "מכחולים", MALE, countOnly, ItemCategory.ART_SUPPLIES));
-        items.add(new ItemTag("קנבס", "קנבסים", MALE, countOnly, ItemCategory.ART_SUPPLIES));
-        items.add(new ItemTag("שפופרת צבע", "שפופרות צבע", FEMALE, countOnly, ItemCategory.ART_SUPPLIES));
-        items.add(new ItemTag("חימר", "גושי חימר", MALE, weightOrCount, ItemCategory.ART_SUPPLIES));
+// --- ART SUPPLIES (יצירה - חדש!) ---
+        items.add(new ItemTag("paintbrush", "מכחול", "מכחולים", MALE, countOnly, ItemCategory.ART_SUPPLIES));
+        items.add(new ItemTag("canvas", "קנבס", "קנבסים", MALE, countOnly, ItemCategory.ART_SUPPLIES));
+        items.add(new ItemTag("paint_tube", "שפופרת צבע", "שפופרות צבע", FEMALE, countOnly, ItemCategory.ART_SUPPLIES));
+        items.add(new ItemTag("clay", "חימר", "גושי חימר", MALE, weightOrCount, ItemCategory.ART_SUPPLIES));
 
-        // --- STATIONERY (כלי כתיבה) ---
-        items.add(new ItemTag("עיפרון", "עפרונות", MALE, countOnly, ItemCategory.STATIONERY));
-        items.add(new ItemTag("מחברת", "מחברות", FEMALE, countOnly, ItemCategory.STATIONERY));
-        items.add(new ItemTag("מחק", "מחקים", MALE, countOnly, ItemCategory.STATIONERY));
-        items.add(new ItemTag("סרגל", "סרגלים", MALE, countOnly, ItemCategory.STATIONERY));
+// --- STATIONERY (כלי כתיבה) ---
+        items.add(new ItemTag("pencil", "עיפרון", "עפרונות", MALE, countOnly, ItemCategory.STATIONERY));
+        items.add(new ItemTag("notebook", "מחברת", "מחברות", FEMALE, countOnly, ItemCategory.STATIONERY));
+        items.add(new ItemTag("eraser", "מחק", "מחקים", MALE, countOnly, ItemCategory.STATIONERY));
+        items.add(new ItemTag("ruler", "סרגל", "סרגלים", MALE, countOnly, ItemCategory.STATIONERY));
 
-        // --- ANTIQUE & COLLECTIBLE (עתיקות ואספנות) ---
-        items.add(new ItemTag("מטבע זהב", "מטבעות זהב", MALE, weightOrCount, ItemCategory.ANTIQUE, ItemCategory.COLLECTIBLE));
-        items.add(new ItemTag("כד חרס", "כדי חרס", MALE, countOnly, ItemCategory.ANTIQUE));
-        items.add(new ItemTag("קלף פוקימון", "קלפי פוקימון", MALE, countOnly, ItemCategory.COLLECTIBLE));
-        items.add(new ItemTag("בובת פופ", "בובות פופ", FEMALE, countOnly, ItemCategory.COLLECTIBLE));
+// --- ANTIQUE & COLLECTIBLE (עתיקות ואספנות) ---
+        items.add(new ItemTag("gold_coin", "מטבע זהב", "מטבעות זהב", MALE, weightOrCount, ItemCategory.ANTIQUE, ItemCategory.COLLECTIBLE));
+        items.add(new ItemTag("clay_jug", "כד חרס", "כדי חרס", MALE, countOnly, ItemCategory.ANTIQUE));
+        items.add(new ItemTag("pokemon_card", "קלף פוקימון", "קלפי פוקימון", MALE, countOnly, ItemCategory.COLLECTIBLE));
+        items.add(new ItemTag("pop_figure", "בובת פופ", "בובות פופ", FEMALE, countOnly, ItemCategory.COLLECTIBLE));
 
-        // --- MEDICAL (רפואי) ---
-        items.add(new ItemTag("תרופה", "תרופות", FEMALE, countOnly, ItemCategory.MEDICAL));
-        items.add(new ItemTag("פלסטר", "פלסטרים", MALE, countOnly, ItemCategory.MEDICAL));
+// --- MEDICAL (רפואי) ---
+        items.add(new ItemTag("medicine", "תרופה", "תרופות", FEMALE, countOnly, ItemCategory.MEDICAL));
+        items.add(new ItemTag("bandage", "פלסטר", "פלסטרים", MALE, countOnly, ItemCategory.MEDICAL));
 
-        // --- TOY (צעצועים) ---
-        items.add(new ItemTag("בובה", "בובות", FEMALE, countOnly, ItemCategory.TOY));
-        items.add(new ItemTag("פאזל", "פאזלים", MALE, countOnly, ItemCategory.TOY));
+// --- TOY (צעצועים) ---
+        items.add(new ItemTag("doll", "בובה", "בובות", FEMALE, countOnly, ItemCategory.TOY));
+        items.add(new ItemTag("puzzle", "פאזל", "פאזלים", MALE, countOnly, ItemCategory.TOY));
 
-        // --- CLOTHING (ביגוד) ---
-        items.add(new ItemTag("חולצה", "חולצות", FEMALE, noUnit, ItemCategory.CLOTHING));
-        items.add(new ItemTag("מכנס", "מכנסיים", MALE, noUnit, ItemCategory.CLOTHING));
+// --- CLOTHING (ביגוד) ---
+        items.add(new ItemTag("shirt", "חולצה", "חולצות", FEMALE, noUnit, ItemCategory.CLOTHING));
+        items.add(new ItemTag("pants", "מכנס", "מכנסיים", MALE, noUnit, ItemCategory.CLOTHING));
 
-        // --- ELECTRONICS (אלקטרוניקה) ---
-        items.add(new ItemTag("מחשב נייד", "מחשבים ניידים", MALE, countOnly, ItemCategory.ELECTRONICS));
-        items.add(new ItemTag("אוזנייה", "אוזניות", FEMALE, countOnly, ItemCategory.ELECTRONICS));
+// --- ELECTRONICS (אלקטרוניקה) ---
+        items.add(new ItemTag("laptop", "מחשב נייד", "מחשבים ניידים", MALE, countOnly, ItemCategory.ELECTRONICS));
+        items.add(new ItemTag("earphone", "אוזנייה", "אוזניות", FEMALE, countOnly, ItemCategory.ELECTRONICS));
 
-        // --- HARDWARE (חומרי בניין ועבודה - התאמה לאורך) ---
-        items.add(new ItemTag("כבל חשמל", "כבלי חשמל", MALE, lengthOnly, ItemCategory.HARDWARE, ItemCategory.ELECTRONICS));
-        items.add(new ItemTag("חבל", "חבלים", MALE, lengthOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("צינור", "צינורות", MALE, lengthOnly, ItemCategory.HARDWARE));
+// --- HARDWARE (חומרי בניין ועבודה - התאמה לאורך) ---
+        items.add(new ItemTag("power_cable", "כבל חשמל", "כבלי חשמל", MALE, lengthOnly, ItemCategory.HARDWARE, ItemCategory.ELECTRONICS));
+        items.add(new ItemTag("rope", "חבל", "חבלים", MALE, lengthOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("pipe", "צינור", "צינורות", MALE, lengthOnly, ItemCategory.HARDWARE));
 
-
-        // פריטי כלי עבודה וחומרי בניין (HARDWARE) - ספירים
-        items.add(new ItemTag("פטיש", "פטישים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("מברג", "מברגים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("מסמר", "מסמרים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("בורג", "ברגים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("מנעול", "מנעולים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("מפתח ברגים", "מפתחות ברגים", MALE, countOnly, ItemCategory.HARDWARE));
-        items.add(new ItemTag("מברשת צבע", "מברשות צבע", FEMALE, countOnly, ItemCategory.HARDWARE));
+// פריטי כלי עבודה וחומרי בניין (HARDWARE) - ספירים
+        items.add(new ItemTag("hammer", "פטיש", "פטישים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("screwdriver", "מברג", "מברגים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("nail", "מסמר", "מסמרים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("screw", "בורג", "ברגים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("lock", "מנעול", "מנעולים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("wrench", "מפתח ברגים", "מפתחות ברגים", MALE, countOnly, ItemCategory.HARDWARE));
+        items.add(new ItemTag("paint_brush", "מברשת צבע", "מברשות צבע", FEMALE, countOnly, ItemCategory.HARDWARE));
 
         return  items;
     }
@@ -855,13 +854,18 @@ public class MathQuestionGenerator {
         add.addForm("past", FEMALE, "s", "הוסיפה");
         add.addForm("past", MALE, "p", "הוסיפו");
         add.addForm("past", FEMALE, "p", "הוסיפו");
+        add.addForm("inf", MALE, "ANY", "להוסיף");
+
+        add.addForm("present", MALE, "s", "מוסיף");
+        add.addForm("present", FEMALE, "s", "מוסיפה");
+        add.addForm("present", MALE, "p", "מוסיפים");
+        add.addForm("present", FEMALE, "p", "מוסיפות");
+
 
         add.addForm("future", MALE, "s", "יוסיף");
         add.addForm("future", FEMALE, "s", "תוסיף");
         add.addForm("future", MALE, "p", "יוסיפו");
         add.addForm("future", FEMALE, "p", "יוסיפו");
-
-        add.addForm("inf", MALE, "ANY", "להוסיף");
         verbs.add(add);
 
         VerbTag read = new VerbTag("read");
@@ -901,6 +905,25 @@ public class MathQuestionGenerator {
         walk.addForm("present", FEMALE, "p", "הולכות");
         walk.addForm("inf", MALE, "ANY", "ללכת");
         verbs.add(walk);
+
+        // הפועל "הפסיד / מפסיד" (lose_game) - מזהה חדש למניעת התנגשויות
+        VerbTag loseGame = new VerbTag("lose_game");
+        loseGame.addForm("present", MALE, "s", "מפסיד");
+        loseGame.addForm("present", FEMALE, "s", "מפסידה");
+        loseGame.addForm("past", MALE, "s", "הפסיד");
+        loseGame.addForm("past", FEMALE, "s", "הפסידה");
+        loseGame.addForm("past", MALE, "p", "הפסידו");
+        loseGame.addForm("past", FEMALE, "p", "הפסידו");
+        loseGame.addForm("inf", MALE, "ANY", "להפסיד");
+        verbs.add(loseGame);
+
+        VerbTag run = new VerbTag("run");
+        run.addForm("present", MALE, "s", "רץ");
+        run.addForm("present", FEMALE, "s", "רצה");
+        run.addForm("past", MALE, "s", "רץ");
+        run.addForm("past", FEMALE, "s", "רצה");
+        verbs.add(run);
+
 
 // --- הכין (prepare) ---
         VerbTag prepare = new VerbTag("prepare");
@@ -957,6 +980,32 @@ public class MathQuestionGenerator {
         start.addForm("inf", MALE, "ANY", "להתחיל");
         verbs.add(start);
 
+        // הפועל "שיחק / משחק" (play)
+        VerbTag play = new VerbTag("play");
+        play.addForm("present", MALE, "s", "משחק");
+        play.addForm("present", FEMALE, "s", "משחקת");
+        play.addForm("present", MALE, "p", "משחקים");
+        play.addForm("present", FEMALE, "p", "משחקות");
+        play.addForm("past", MALE, "s", "שיחק");
+        play.addForm("past", FEMALE, "s", "שיחקה");
+        play.addForm("past", MALE, "p", "שיחקו");
+        play.addForm("past", FEMALE, "p", "שיחקו");
+        play.addForm("inf", MALE, "ANY", "לשחק");
+        verbs.add(play);
+
+// הפועל "ניצח / מנצח" (win)
+        VerbTag win = new VerbTag("win");
+        win.addForm("present", MALE, "s", "מנצח");
+        win.addForm("present", FEMALE, "s", "מנצחת");
+        win.addForm("present", MALE, "p", "מנצחים");
+        win.addForm("present", FEMALE, "p", "מנצחות");
+        win.addForm("past", MALE, "s", "ניצח");
+        win.addForm("past", FEMALE, "s", "ניצחה");
+        win.addForm("past", MALE, "p", "ניצחו");
+        win.addForm("past", FEMALE, "p", "ניצחו");
+        win.addForm("inf", MALE, "ANY", "לנצח");
+        verbs.add(win);
+
         return verbs;
     }
 
@@ -964,7 +1013,7 @@ public class MathQuestionGenerator {
         ArrayList<PlaceTag> places = new ArrayList<>();
         // --- חנויות מזון ---
         places.add(new PlaceTag("supermarket", "סופרמרקט", "סופרמרקטים", MALE, PlaceType.STORE,
-                ItemCategory.PRODUCE, ItemCategory.BAKED_GOODS, ItemCategory.DRINKS, ItemCategory.SWEETS, ItemCategory.GENERAL_FOOD, ItemCategory.HARDWARE));
+                ItemCategory.PRODUCE, ItemCategory.BAKED_GOODS, ItemCategory.DRINKS, ItemCategory.SWEETS, ItemCategory.GENERAL_FOOD));
         places.add(new PlaceTag("grocery", "מכולת", "מכולות", FEMALE, PlaceType.STORE,
                 ItemCategory.PRODUCE, ItemCategory.BAKED_GOODS, ItemCategory.DRINKS, ItemCategory.SWEETS, ItemCategory.GENERAL_FOOD));
         places.add(new PlaceTag("bakery", "מאפייה", "מאפיות", FEMALE, PlaceType.STORE,
@@ -1027,7 +1076,7 @@ public class MathQuestionGenerator {
         // --- מסעדות ומזון (FOOD_SERVICE) ---
         places.add(new PlaceTag("restaurant", "מסעדה", "מסעדות", FEMALE, PlaceType.FOOD_SERVICE, ItemCategory.PRODUCE, ItemCategory.DRINKS, ItemCategory.SWEETS, ItemCategory.BAKED_GOODS));
         places.add(new PlaceTag("cafe", "בית קפה", "בתי קפה", MALE, PlaceType.FOOD_SERVICE, ItemCategory.BAKED_GOODS, ItemCategory.DRINKS, ItemCategory.SWEETS));
-        places.add(new PlaceTag("pizzeria", "פיצרייה", "פיצריות", FEMALE, PlaceType.FOOD_SERVICE, ItemCategory.BAKED_GOODS, ItemCategory.DRINKS));
+        places.add(new PlaceTag("pizzeria", "פיצרייה", "פיצריות", FEMALE, PlaceType.FOOD_SERVICE, ItemCategory.DRINKS));
 
 // --- מרכזי קניות ---
         places.add(new PlaceTag("mall", "קניון", "קניונים", MALE, PlaceType.STORE, ItemCategory.CLOTHING, ItemCategory.ELECTRONICS, ItemCategory.TOY, ItemCategory.SWEETS, ItemCategory.DRINKS));
@@ -1294,6 +1343,6 @@ public class MathQuestionGenerator {
 
 
     public MathQuestion generateForPlayer(RacePlayer player) {
-        return questionEngine.processTemplate(questionTemplateService.getTemplateByDifficulty("easy"));
+        return questionEngine.processTemplate(questionTemplateService.getTemplateByDifficulty("medium"));
     }
 }

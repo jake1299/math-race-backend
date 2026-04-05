@@ -9,8 +9,8 @@
         </id>
 
         <property name="username" type="string" column="username" not-null="true" unique="true"/>
-        <property name="password" type="string" column="password" not-null="true"/>
         <property name="email" type="string" column="email" not-null="true" unique="true"/>
+        <property name="password" type="string" column="password" not-null="true"/>
         <property name="verified" type="boolean" column="verified" not-null="true"/>
 
         <property name="role" column="role" not-null="true">
@@ -31,6 +31,12 @@
             <generator class="native"/>
         </id>
 
+        <many-to-one name="user"
+                     class="com.example.math_race.entities.UserEntity"
+                     column="user_id"
+                     not-null="true"
+                     fetch="join"/>
+
         <property name="token" type="string" column="token" unique="true" not-null="true"/>
 
         <property name="type" column="token_type" not-null="true">
@@ -39,12 +45,6 @@
                 <param name="useNamed">true</param>
             </type>
         </property>
-
-        <many-to-one name="user"
-                     class="com.example.math_race.entities.UserEntity"
-                     column="user_id"
-                     not-null="true"
-                     fetch="join"/>
 
         <property name="expiresAt" type="java.util.Date" column="expires_at" not-null="true"/>
         <property name="revoked" type="boolean" column="is_revoked" not-null="true"/>
@@ -62,14 +62,32 @@
             <generator class="native"/>
         </id>
 
+        <!--        <id name="id" type="uuid-char" column="id">-->
+        <!--            <generator class="uuid2"/>-->
+        <!--        </id>-->
+
+        <property name="raceId" type="string" column="race_id" unique="true" not-null="true"/>
+        <property name="name" type="string" column="race_name" not-null="true"/>
+        <property name="roomCode" type="string" column="room_code" not-null="true"/>
+        <property name="targetScore" type="int" column="target_score" not-null="true"/>
+
+        <property name="createdAtMillis" type="long" column="created_at_millis" not-null="true"/>
+        <property name="endedAtMillis" type="long" column="ended_at_millis" not-null="true"/>
+        <property name="totalDurationMillis" type="long" column="total_duration_millis" not-null="true"/>
+        <property name="totalPausedDurationMillis" type="long" column="total_paused_duration_millis" not-null="true"/>
+
         <many-to-one name="host"
                      class="com.example.math_race.entities.UserEntity"
                      column="host_id"
                      not-null="true"
                      fetch="join"/>
-        <property name="targetScore" type="int" column="target_score" not-null="true"/>
-        <property name="roomCode" type="string" column="room_code" not-null="true"/>
-        <property name="name" type="string" column="race_name" not-null="true"/>
+
+        <property name="status" column="race_status" not-null="true">
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">com.example.math_race.race.RaceStatus</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
 
         <property name="creationDate" type="java.util.Date" column="creation_date" not-null="true"/>
         <property name="updatedDate" type="java.util.Date" column="updated_date"/>
@@ -86,7 +104,10 @@
                      class="com.example.math_race.entities.RaceHistoryEntity"
                      column="race_id"
                      not-null="true" />
-        <many-to-one name="user" class="com.example.math_race.entities.UserEntity" column="user_id" not-null="false"/>
+        <many-to-one name="user"
+                     class="com.example.math_race.entities.UserEntity"
+                     column="user_id"
+                     not-null="false"/>
         <property name="nickname" type="string" column="nick_name" not-null="true"/>
         <property name="finalScore" type="int" column="final_score" not-null="true"/>
 

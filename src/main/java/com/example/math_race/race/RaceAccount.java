@@ -1,5 +1,6 @@
 package com.example.math_race.race;
 
+import com.example.math_race.entities.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,13 +12,14 @@ import java.util.Objects;
 @AllArgsConstructor
 public class RaceAccount {
     private String id;
+    private UserEntity user;
     private String sessionActive;
     private String joinToken;
     private String nickname;
 
 
     public boolean isGuest() {
-        return id != null && id.startsWith("Guest-");
+        return user == null;
     }
 
     public boolean isConnected() {

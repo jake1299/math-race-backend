@@ -62,7 +62,7 @@ public class RaceService {
         String joinToken = UUID.randomUUID().toString().substring(0, 10);
 
         RaceManager raceManager = new RaceManager(raceSettings);
-        raceManager.setHost(new RaceHost(user.getId()+"",null,joinToken,nickname));
+        raceManager.setHost(new RaceHost(user,null,joinToken,nickname));
 
         while (allRaces.containsKey(raceManager.getRoomCode())){
             raceManager.updateRoomCode();
@@ -136,7 +136,7 @@ public class RaceService {
                 throw new LogicException(ErrorCode.RACE_ALREADY_STARTED);
             }
 
-            raceManager.joinRace(new RacePlayer(accountId,null,joinToken,nickname));
+            raceManager.joinRace(new RacePlayer(accountId,user,null,joinToken,nickname));
             accountIdToOpenRoomCode.put(accountId, raceManager.getRoomCode());
 
         } else if (raceManager.getRoomCode().equals(request.getRoomCode())){

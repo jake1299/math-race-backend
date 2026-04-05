@@ -25,8 +25,10 @@ public class RaceManager {
     private RaceStatus status;
     private long remainingTimeMillis;     // כמה זמן יש לשמשחק
     private long lastResumedAtMillis;// חותמת הזמן של הפעלת השעון האחרונה
+    private long lastPausedAtMillis; // חותמת הזמן של תחילת העצירה הנוכחית
     private final long createdAtMillis;
     private long endedAtMillis;
+    private long totalPausedDurationMillis;
 
     public RaceManager(RaceSettings raceSettings) {
         this.id = UUID.randomUUID().toString();
@@ -39,6 +41,8 @@ public class RaceManager {
 
         this.remainingTimeMillis = raceSettings.getTotalDurationMillis();
         this.lastResumedAtMillis = 0;
+        this.lastPausedAtMillis = 0;
+        this.totalPausedDurationMillis = 0;
         this.createdAtMillis = System.currentTimeMillis();
     }
 
@@ -85,6 +89,14 @@ public class RaceManager {
     public boolean isAccountIn(String accountId) {
         if (accountId == null) return false;
         return players.containsKey(accountId) || isHost(accountId);
+    }
+
+    public void finalizeCurrentPause() {
+        if (this.lastPausedAtMillis > 0) {
+            long duration = System.currentTimeMillis() - this.lastPausedAtMillis;
+            this.totalPausedDurationMillis += duration;
+            this.lastPausedAtMillis = 0;
+        }
     }
 
     public boolean isHost(String accountId) {

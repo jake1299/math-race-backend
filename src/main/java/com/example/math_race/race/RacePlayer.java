@@ -1,5 +1,6 @@
 package com.example.math_race.race;
 
+import com.example.math_race.entities.UserEntity;
 import com.example.math_race.race.questions.MathQuestion;
 import lombok.*;
 
@@ -15,8 +16,16 @@ public class RacePlayer extends RaceAccount{
     private long questionStartTimeMillis;
     private int currentScore;
 
-    public RacePlayer(String accountId,String sessionActive, String joinToken ,String nickname){
-        super(accountId,sessionActive,joinToken,nickname);
+    public RacePlayer(String accountId, String sessionActive, String joinToken ,String nickname){
+        this(accountId,null,sessionActive,joinToken,nickname);
+    }
+
+    public RacePlayer(UserEntity user, String sessionActive, String joinToken , String nickname){
+        this(user.getId()+"",user,sessionActive,joinToken,nickname);
+    }
+
+    public RacePlayer(String accountId, UserEntity user, String sessionActive, String joinToken ,String nickname){
+        super(accountId,user,sessionActive,joinToken,nickname);
         this.currentScore = 0;
     }
 

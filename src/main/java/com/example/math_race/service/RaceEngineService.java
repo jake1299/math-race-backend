@@ -9,11 +9,13 @@ import com.example.math_race.race.RacePlayer;
 import com.example.math_race.race.RaceStatus;
 import com.example.math_race.race.questions.MathQuestion;
 import com.example.math_race.race.questions.MathQuestionGenerator;
+import com.example.math_race.repositories.RaceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -29,19 +31,20 @@ public class RaceEngineService {
     private final ThreadPoolTaskScheduler scheduler;
     private final WebSocketService webSocketService;
     private final MathQuestionGenerator mathQuestionGenerator;
-    private final Map<String, ScheduledFuture<?>> raceEndTimers;
-    private final Map<String, ScheduledFuture<?>> playerQuestionTimers;
+    private final RaceRepository raceRepository;
+
+    private final Map<String, ScheduledFuture<?>> raceEndTimers = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> playerQuestionTimers = new ConcurrentHashMap<>();
 
     @Autowired
     public RaceEngineService(
             @Qualifier(GAME_SCHEDULER_BEAN_NAME) ThreadPoolTaskScheduler scheduler, WebSocketService webSocketService,
-            MathQuestionGenerator mathQuestionGenerator) {
+            MathQuestionGenerator mathQuestionGenerator,  RaceRepository raceRepository) {
 
         this.scheduler = scheduler;
         this.webSocketService = webSocketService;
         this.mathQuestionGenerator = mathQuestionGenerator;
-        this.raceEndTimers = new ConcurrentHashMap<>();
-        this.playerQuestionTimers = new ConcurrentHashMap<>();
+        this.raceRepository = raceRepository;
     }
 
     public void startRace(RaceManager race) {
@@ -210,8 +213,9 @@ public class RaceEngineService {
         }
 
         race.setStatus(RaceStatus.PAUSED);
-        race.setRemainingTimeMillis(currentRemainingTime);
+        race.setLastPausedAtMillis(System.currentTimeMillis());
         race.setLastResumedAtMillis(0);
+        race.setRemainingTimeMillis(currentRemainingTime);
 
         ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId());
         if (endTask != null) {
@@ -227,6 +231,8 @@ public class RaceEngineService {
 
     public void resumeRace(RaceManager race) {
         if (race == null || !race.getStatus().equals(RaceStatus.PAUSED)) return;
+
+        race.finalizeCurrentPause();
 
         race.setStatus(RaceStatus.IN_PROGRESS);
         race.setLastResumedAtMillis(System.currentTimeMillis());
@@ -255,6 +261,7 @@ public class RaceEngineService {
 
         raceEndTimers.remove(race.getId());
         clearAllPlayerTimersForRoom(race);
+        saveRace(race);
 
         RaceResultsDTO resultsDTO = new RaceResultsDTO(race);
 
@@ -267,6 +274,10 @@ public class RaceEngineService {
     public void cancelledRace(RaceManager race) {
         if (race.getStatus().isClosed()) return;
 
+        if (race.getStatus().equals(RaceStatus.PAUSED)){
+           race.finalizeCurrentPause();
+        }
+
         // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
 
         race.setStatus(RaceStatus.CANCELLED);
@@ -276,7 +287,9 @@ public class RaceEngineService {
         if (endTask != null) {
             endTask.cancel(false);
         }
+
         clearAllPlayerTimersForRoom(race);
+        saveRace(race);
 
         StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.CANCELLED);
 
@@ -284,6 +297,10 @@ public class RaceEngineService {
         webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",statusChangedDTO,
                 race.getHost().getId(),race.getHost().getSessionActive());
 
+    }
+
+    private void saveRace(RaceManager race) {
+        raceRepository.saveRaceToHistory(race);
     }
 
     private void clearAllPlayerTimersForRoom(RaceManager race) {

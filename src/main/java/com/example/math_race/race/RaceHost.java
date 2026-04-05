@@ -1,5 +1,6 @@
 package com.example.math_race.race;
 
+import com.example.math_race.entities.UserEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,8 @@ import lombok.ToString;
 @NoArgsConstructor
 public class RaceHost extends RaceAccount {
 
-    public RaceHost(String accountId,String sessionActive, String joinToken,String nickname){
-        super(accountId,sessionActive,joinToken,nickname);
+    public RaceHost(UserEntity user,String sessionActive, String joinToken,String nickname){
+        super(user.getId()+"",user,sessionActive,joinToken,nickname);
     }
 
 }

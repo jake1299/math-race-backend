@@ -18,13 +18,15 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemTag implements MatchableTag {
+    private String id;
     private String singular;
     private String plural;
     private Gender gender;
     private Set<ItemCategory> categories;
     private Set<UnitType> allowedUnits;
 
-    public ItemTag(String singular, String plural, Gender gender, Set<UnitType> allowedUnits, ItemCategory... categories) {
+    public ItemTag(String id, String singular, String plural, Gender gender, Set<UnitType> allowedUnits, ItemCategory... categories) {
+        this.id = id;
         this.singular = singular;
         this.plural = plural;
         this.gender = gender;
@@ -37,6 +39,7 @@ public class ItemTag implements MatchableTag {
         if ("s".equals(key)) return singular;
         if ("p".equals(key)) return plural;
         if ("g".equals(key)) return gender.name();
+        if ("id".equals(key)) return id;
 
         if ("t".equalsIgnoreCase(key)) {
             return categories.stream()
@@ -170,6 +173,18 @@ public class ItemTag implements MatchableTag {
                 if (isMaleMatch || isFemaleMatch) return false;
             } else {
                 if (!isMaleMatch && !isFemaleMatch) return false;
+            }
+        }
+
+        if (constraints.containsKey("id") && !constraints.get("id").equals("?")) {
+            String reqId = constraints.get("id").trim();
+
+            if (reqId.startsWith("!")) {
+                String excludedId = reqId.substring(1);
+
+                if (this.id.equalsIgnoreCase(excludedId)) return false;
+            } else {
+                if (!this.id.equalsIgnoreCase(reqId)) return false;
             }
         }
 

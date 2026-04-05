@@ -53,6 +53,9 @@ public class NumberTag implements TemplateTag {
         if (key.equals("max")) {
             return String.valueOf(max);
         }
+        if (key.equals("abs")) {
+            return String.valueOf(Math.abs(value));
+        }
 
         try {
             if (key.startsWith("mul_")) {

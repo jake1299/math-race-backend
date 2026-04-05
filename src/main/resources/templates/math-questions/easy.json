@@ -9,27 +9,5 @@
       "[NUM:value=(#TOTAL_COST):#R]",
       "[IF:(#W)=0:<[NUM:value=(#BILL:sub_(#QTY)):#R]>:<[NUM:value=(#QTY:add_(#EXTRA_PRICE)):#R]>]"
     ]
-  },
-  {
-    "id": "easy_logic_2",
-    "questionTemplate": "[PLACE:place_type=HOME|EDUCATION:*:#P1][ITEM:type=(#P1:t);unit_type=COUNT:*:#I1][UNIT:type=(#I1:allowed_unit);item_category=(#I1:t):*:#U1][HUMAN:*:#1][HUMAN:n=!(#1:n):*:#2][NUM:min=3;max=5:*:#BOXES][NUM:min=4;max=9:*:#IN_BOX][NUM:value=(#BOXES:mul_(#IN_BOX)):*:#TARGET][NUM:min=2;max=8:*:#DIFF][NUM:value=(#TARGET:add_(#DIFF)):*:#START_SUB][NUM:value=(#TARGET:sub_(#DIFF)):*:#START_ADD][NUM:min=0;max=1:*:#W][IF:(#W)=0:<ל[#1:n] היו [#START_SUB] [#I1:p]. [#1:he_she] [VERB:id=give:(past_+(#1:g)+_s)] ל[#2:n] [#DIFF] [#I1:p], ואת השאר [VERB:id=divide:(past_+(#1:g)+_s)] שווה בשווה ל-[#BOXES] [#U1:p]. כמה [#I1:p] יש בכל [#U1:s]?>:<ל[#1:n] היו [#START_ADD] [#I1:p]. [#1:he_she] [VERB:id=find:(past_+(#1:g)+_s)] עוד [#DIFF] [#I1:p], ואז [VERB:id=divide:(past_+(#1:g)+_s)] הכל שווה בשווה ל-[#BOXES] [#U1:p]. כמה [#I1:p] יש בכל [#U1:s]?>]",
-    "answerTemplate": "[NUM:value=(#IN_BOX):#R]",
-    "hintTemplate": "[IF:(#W)=0:<כדי לפתור, קודם חסר את ה-[#I1:p] ש[#1:n] [VERB:id=give:(past_+(#1:g)+_s)], ואז חלק את התוצאה ב-[#BOXES].>:<כדי לפתור, קודם חבר את ה-[#I1:p] ש[#1:n] [VERB:id=find:(past_+(#1:g)+_s)], ואז חלק את התוצאה ב-[#BOXES].>]",
-    "distractorsTemplates": [
-      "[NUM:value=(#TARGET):#R]",
-      "[NUM:value=(#TARGET:mul_(#BOXES)):#R]",
-      "[NUM:value=(#TARGET:sub_(#BOXES)):#R]"
-    ]
-  },
-  {
-    "id": "easy_logic_3",
-    "questionTemplate": "[PLACE:place_type=STORE|FOOD_SERVICE:*:#P1][ROLE:place_id=(#P1:id);role_type=OPERATOR:*:#O1][ITEM:type=(#P1:t);unit_type=COUNT:*:#I1][HUMAN:*:*:#1][NUM:min=8;max=12:*:#MINS_PER][NUM:min=3;max=6:*:#QTY][NUM:value=(#QTY:mul_(#MINS_PER)):*:#TOTAL_MINS][TIME:min=08.00;max=16.00;round=true:*:#T_START][NUM:min=0;max=1:*:#W][#1:n] ה[#O1:s(#1:g)] [VERB:id=prepare:(past_+(#1:g)+_s):#V1] [#I1:p] ב[#P1:s]. הכנת כל [#I1:s] לוקחת בדיוק [#MINS_PER] דקות. [IF:(#W)=0:<אם [#1:he_she] [VERB:id=start:(past_+(#1:g)+_s):#V2] להכין [#QTY] [#I1:p] בשעה [#T_START], באיזו שעה [#1:he_she] [VERB:id=finish:(past_+(#1:g)+_s):#V3]?>:<אם [#1:he_she] [VERB:id=work:(past_+(#1:g)+_s):#V4] ברצף במשך [#TOTAL_MINS] דקות, כמה [#I1:p] [#1:he_she] [VERB:id=prepare:(past_+(#1:g)+_s):#V5] סך הכל?>]",
-    "answerTemplate": "[IF:(#W)=0:<[TIME:value=(#T_START:add_m_(#TOTAL_MINS)):#R]>:<[NUM:value=(#TOTAL_MINS:div_(#MINS_PER)):#R]>]",
-    "hintTemplate": "[IF:(#W)=0:<כדי לפתור, חשב כמה דקות לוקח להכין את כל ה-[#I1:p] יחד (כפל), ואז הוסף את התוצאה לשעת ההתחלה.>:<כדי למצוא את הכמות, חלק את סך כל דקות העבודה ([#TOTAL_MINS]) בזמן שלוקח להכין [#I1:s] אחד ([#MINS_PER]).>]",
-    "distractorsTemplates": [
-      "[IF:(#W)=0:<[TIME:value=(#T_START:add_m_(#MINS_PER)):#R]>:<[NUM:value=(#TOTAL_MINS:mul_(#MINS_PER)):#R]>]",
-      "[IF:(#W)=0:<[TIME:value=(#T_START:add_m_(#QTY)):#R]>:<[NUM:value=(#TOTAL_MINS:sub_(#MINS_PER)):#R]>]",
-      "[IF:(#W)=0:<[TIME:value=(#T_START:add_m_(#TOTAL_MINS)):add_m_10:#R]>:<[NUM:value=(#QTY:add_1):#R]>]"
-    ]
   }
 ]
