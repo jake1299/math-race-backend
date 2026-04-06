@@ -4,10 +4,11 @@ import lombok.Data;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
 @Data
 public abstract class BaseEntity {
-    private int id;
+    private UUID id;
     private Date creationDate;
     private Date updatedDate;
     private boolean deleted;

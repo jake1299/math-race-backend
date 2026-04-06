@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainIdan {
+    
     public static void main(String[] args) {
 
         //[HUMAN:g=m:#1] [VERB:id=buy:(past_+(#1:g)+_s)]

@@ -31,7 +31,7 @@ public class RaceStateDTO {
         this.host = new HostDetailsDTO(race.getHost());
         this.status = race.getStatus();
         this.players = new ArrayList<>();
-        this.totalDurationMillis = race.getSettings().getTotalDurationMillis();
+        this.totalDurationMillis = race.getSettings().getTotalDurationTimeMs();
 
         boolean toHostAccount = race.isHost(toAccount.getId());
 

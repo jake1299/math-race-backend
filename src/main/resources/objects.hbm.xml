@@ -4,8 +4,9 @@
 
 <hibernate-mapping>
     <class name="com.example.math_race.entities.UserEntity" table="users" lazy="false">
-        <id name="id" type="int" column="id">
-            <generator class="native"/>
+        <id name="id" type="org.hibernate.type.UUIDBinaryType">
+            <column name="id" length="16" />
+            <generator class="org.hibernate.id.UUIDGenerator"/>
         </id>
 
         <property name="username" type="string" column="username" not-null="true" unique="true"/>
@@ -27,8 +28,9 @@
     </class>
 
     <class name="com.example.math_race.entities.TokenEntity" table="tokens" lazy="false">
-        <id name="id" type="int" column="id">
-            <generator class="native"/>
+        <id name="id" type="org.hibernate.type.UUIDBinaryType">
+            <column name="id" length="16" />
+            <generator class="org.hibernate.id.UUIDGenerator"/>
         </id>
 
         <many-to-one name="user"
@@ -58,15 +60,11 @@
     </class>
 
     <class name="com.example.math_race.entities.RaceHistoryEntity" table="race_history" lazy="false">
-        <id name="id" type="int" column="id">
-            <generator class="native"/>
+        <id name="id" type="org.hibernate.type.UUIDBinaryType">
+            <column name="id" length="16" />
+            <generator class="org.hibernate.id.UUIDGenerator"/>
         </id>
 
-        <!--        <id name="id" type="uuid-char" column="id">-->
-        <!--            <generator class="uuid2"/>-->
-        <!--        </id>-->
-
-        <property name="raceId" type="string" column="race_id" unique="true" not-null="true"/>
         <property name="name" type="string" column="race_name" not-null="true"/>
         <property name="roomCode" type="string" column="room_code" not-null="true"/>
         <property name="targetScore" type="int" column="target_score" not-null="true"/>
@@ -96,8 +94,9 @@
     </class>
 
     <class name="com.example.math_race.entities.RaceParticipantHistoryEntity" table="race_participant" lazy="false">
-        <id name="id" type="int" column="id">
-            <generator class="native"/>
+        <id name="id" type="org.hibernate.type.UUIDBinaryType">
+            <column name="id" length="16" />
+            <generator class="org.hibernate.id.UUIDGenerator"/>
         </id>
 
         <many-to-one name="race"

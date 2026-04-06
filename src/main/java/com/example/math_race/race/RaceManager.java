@@ -11,9 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class RaceManager {
-
-    private String id;
-
     public static final int MAX_PLAYERS = 20;
 
     private final RaceSettings settings;
@@ -22,16 +19,17 @@ public class RaceManager {
     private RaceHost host;
     private final Map<String, RacePlayer> players;
 
+    private UUID id;
     private RaceStatus status;
-    private long remainingTimeMillis;     // כמה זמן יש לשמשחק
-    private long lastResumedAtMillis;// חותמת הזמן של הפעלת השעון האחרונה
-    private long lastPausedAtMillis; // חותמת הזמן של תחילת העצירה הנוכחית
-    private final long createdAtMillis;
-    private long endedAtMillis;
-    private long totalPausedDurationMillis;
+    private long remainingTimeMs;     // כמה זמן יש לשמשחק
+    private long lastResumedAtMs;// חותמת הזמן של הפעלת השעון האחרונה
+    private long lastPausedAtMs; // חותמת הזמן של תחילת העצירה הנוכחית
+    private final long createdAtMs;
+    private long endedAtMs;
+    private long totalPausedDurationTimeMs;
 
     public RaceManager(RaceSettings raceSettings) {
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
         this.status = RaceStatus.PENDING;
 
         this.settings = raceSettings;
@@ -39,11 +37,11 @@ public class RaceManager {
 
         this.players = new ConcurrentHashMap<>();
 
-        this.remainingTimeMillis = raceSettings.getTotalDurationMillis();
-        this.lastResumedAtMillis = 0;
-        this.lastPausedAtMillis = 0;
-        this.totalPausedDurationMillis = 0;
-        this.createdAtMillis = System.currentTimeMillis();
+        this.remainingTimeMs = raceSettings.getTotalDurationTimeMs();
+        this.lastResumedAtMs = 0;
+        this.lastPausedAtMs = 0;
+        this.totalPausedDurationTimeMs = 0;
+        this.createdAtMs = System.currentTimeMillis();
     }
 
     public void joinRace(RacePlayer player) {
@@ -77,11 +75,11 @@ public class RaceManager {
 
     public long getCalculatedRemainingTime() {
         if (this.status != RaceStatus.IN_PROGRESS) {
-            return this.remainingTimeMillis;
+            return this.remainingTimeMs;
         }
 
-        long timeElapsedSinceResume = System.currentTimeMillis() - this.lastResumedAtMillis;
-        long actualRemaining = this.remainingTimeMillis - timeElapsedSinceResume;
+        long timeElapsedSinceResume = System.currentTimeMillis() - this.lastResumedAtMs;
+        long actualRemaining = this.remainingTimeMs - timeElapsedSinceResume;
 
         return Math.max(0, actualRemaining);
     }
@@ -92,10 +90,10 @@ public class RaceManager {
     }
 
     public void finalizeCurrentPause() {
-        if (this.lastPausedAtMillis > 0) {
-            long duration = System.currentTimeMillis() - this.lastPausedAtMillis;
-            this.totalPausedDurationMillis += duration;
-            this.lastPausedAtMillis = 0;
+        if (this.lastPausedAtMs > 0) {
+            long duration = System.currentTimeMillis() - this.lastPausedAtMs;
+            this.totalPausedDurationTimeMs += duration;
+            this.lastPausedAtMs = 0;
         }
     }
 

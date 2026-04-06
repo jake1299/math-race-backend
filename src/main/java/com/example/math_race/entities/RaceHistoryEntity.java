@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,7 +15,6 @@ public class RaceHistoryEntity extends BaseEntity {
     private String roomCode;
     private UserEntity host;
     private int targetScore;
-    private String raceId;
     private RaceStatus status;
     private long createdAtMillis;
     private long endedAtMillis;
@@ -26,15 +23,15 @@ public class RaceHistoryEntity extends BaseEntity {
 
     public RaceHistoryEntity(RaceManager raceManager) {
         super();
+        setId(raceManager.getId());
         this.name = raceManager.getSettings().getRaceName();
         this.roomCode = raceManager.getRoomCode();
         this.host = raceManager.getHost().getUser();
         this.targetScore = raceManager.getSettings().getTargetScore();
-        this.raceId = raceManager.getId();
         this.status = raceManager.getStatus();
-        this.createdAtMillis = raceManager.getCreatedAtMillis();
-        this.endedAtMillis = raceManager.getEndedAtMillis();
-        this.totalDurationMillis = raceManager.getSettings().getTotalDurationMillis();
-        this.totalPausedDurationMillis = raceManager.getTotalPausedDurationMillis();
+        this.createdAtMillis = raceManager.getCreatedAtMs();
+        this.endedAtMillis = raceManager.getEndedAtMs();
+        this.totalDurationMillis = raceManager.getSettings().getTotalDurationTimeMs();
+        this.totalPausedDurationMillis = raceManager.getTotalPausedDurationTimeMs();
     }
 }

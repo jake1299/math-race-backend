@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -51,12 +50,12 @@ public class RaceEngineService {
         if (race == null || !race.getStatus().equals(RaceStatus.PENDING)) return;
 
         race.setStatus(RaceStatus.IN_PROGRESS);
-        race.setLastResumedAtMillis(System.currentTimeMillis());
+        race.setLastResumedAtMs(System.currentTimeMillis());
 
-        Instant endTime = Instant.now().plusMillis(race.getRemainingTimeMillis());
+        Instant endTime = Instant.now().plusMillis(race.getRemainingTimeMs());
         ScheduledFuture<?> endTask = scheduler.schedule(() -> finishRace(race), Date.from(endTime));
 
-        raceEndTimers.put(race.getId(), endTask);
+        raceEndTimers.put(race.getId().toString(), endTask);
 
         StatusChangedDTO statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
         webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_START", statusChangedDTO,
@@ -87,8 +86,8 @@ public class RaceEngineService {
             MathQuestion question = mathQuestionGenerator.generateForPlayer(player);
             player.setCurrentQuestion(question);
 
-            player.setQuestionStartTimeMillis(System.currentTimeMillis());
-            player.setQuestionRemainingTimeMillis(question.getTimeLimitMillis());
+            player.setQuestionStartTimeAtMs(System.currentTimeMillis());
+            player.setQuestionRemainingTimeMs(question.getTimeLimitMillis());
 
             MathQuestionDTO questionDTO = new MathQuestionDTO(race, player, question);
             webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "NEW_QUESTION", questionDTO,
@@ -96,7 +95,6 @@ public class RaceEngineService {
 
             webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "QUESTION_SENT", questionDTO,
                     race.getHost().getId(), race.getHost().getSessionActive());
-
 
             Instant timeoutTime = Instant.now().plusMillis(question.getTimeLimitMillis());
             ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> handleQuestionTimeout(race, player, question), Date.from(timeoutTime));
@@ -119,11 +117,15 @@ public class RaceEngineService {
                 timer.cancel(false);
             }
 
+            player.addRegularAttempt();
+            player.addRegularTimeMs(player.getQuestionTimeSpent());
+
             boolean isCorrect = player.checkAnswer(answer);
             int addScore;
             if (isCorrect) {
                 addScore = player.getCurrentQuestion().getScore();
                 player.addScore(addScore);
+                player.addRegularSuccess();
             } else {
                 addScore = -(int) (player.getCurrentQuestion().getScore() * 0.2);
                 if (player.getCurrentScore() + addScore < 0)
@@ -145,9 +147,8 @@ public class RaceEngineService {
             if (player.getCurrentScore() >= race.getSettings().getTargetScore()) {
                 finishRace(race);
             } else {
-                scheduler.schedule(() -> {
-                    sendNextQuestionToPlayer(race, player);
-                }, Date.from(Instant.now().plusMillis(200)));
+                scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
+                        Date.from(Instant.now().plusMillis(200)));
 
             }
 
@@ -162,6 +163,9 @@ public class RaceEngineService {
                 return;
             }
 
+            player.addRegularAttempt();
+            player.addRegularTimeMs(player.getQuestionTimeSpent());
+
             playerQuestionTimers.remove(player.getId());
             player.setCurrentQuestion(null);
 
@@ -172,9 +176,8 @@ public class RaceEngineService {
             webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_TIMEOUT", answerScoreDTO,
                     race.getHost().getId(), race.getHost().getSessionActive());
 
-            scheduler.schedule(() -> {
-                sendNextQuestionToPlayer(race, player);
-            }, Date.from(Instant.now().plusMillis(200)));
+            scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
+                    Date.from(Instant.now().plusMillis(200)));
         }
     }
 
@@ -186,8 +189,8 @@ public class RaceEngineService {
             return;
         }
 
-        long remainingTime = player.getQuestionRemainingTimeMillis();
-        player.setQuestionStartTimeMillis(System.currentTimeMillis());
+        long remainingTime = player.getQuestionRemainingTimeMs();
+        player.setQuestionStartTimeAtMs(System.currentTimeMillis());
 
 
         MathQuestion currentQuestion = player.getCurrentQuestion();
@@ -208,16 +211,16 @@ public class RaceEngineService {
                 timer.cancel(false);
 
                 long remainingTime = player.getCalculatedQuestionRemainingTime(race.getStatus());
-                player.setQuestionRemainingTimeMillis(remainingTime);
+                player.setQuestionRemainingTimeMs(remainingTime);
             }
         }
 
         race.setStatus(RaceStatus.PAUSED);
-        race.setLastPausedAtMillis(System.currentTimeMillis());
-        race.setLastResumedAtMillis(0);
-        race.setRemainingTimeMillis(currentRemainingTime);
+        race.setLastPausedAtMs(System.currentTimeMillis());
+        race.setLastResumedAtMs(0);
+        race.setRemainingTimeMs(currentRemainingTime);
 
-        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId());
+        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId().toString());
         if (endTask != null) {
             endTask.cancel(false);
         }
@@ -235,11 +238,11 @@ public class RaceEngineService {
         race.finalizeCurrentPause();
 
         race.setStatus(RaceStatus.IN_PROGRESS);
-        race.setLastResumedAtMillis(System.currentTimeMillis());
+        race.setLastResumedAtMs(System.currentTimeMillis());
 
-        Instant endTime = Instant.now().plusMillis(race.getRemainingTimeMillis());
+        Instant endTime = Instant.now().plusMillis(race.getRemainingTimeMs());
         ScheduledFuture<?> endTask = scheduler.schedule(() -> finishRace(race), Date.from(endTime));
-        raceEndTimers.put(race.getId(), endTask);
+        raceEndTimers.put(race.getId().toString(), endTask);
 
         StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
 
@@ -257,9 +260,9 @@ public class RaceEngineService {
         // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
 
         race.setStatus(RaceStatus.FINISHED);
-        race.setEndedAtMillis(System.currentTimeMillis());
+        race.setEndedAtMs(System.currentTimeMillis());
 
-        raceEndTimers.remove(race.getId());
+        raceEndTimers.remove(race.getId().toString());
         clearAllPlayerTimersForRoom(race);
         saveRace(race);
 
@@ -281,9 +284,9 @@ public class RaceEngineService {
         // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
 
         race.setStatus(RaceStatus.CANCELLED);
-        race.setEndedAtMillis(System.currentTimeMillis());
+        race.setEndedAtMs(System.currentTimeMillis());
 
-        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId());
+        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId().toString());
         if (endTask != null) {
             endTask.cancel(false);
         }

@@ -12,7 +12,7 @@ public class RaceSettings {
     private String raceName;
     private int targetScore;
 
-    private final long totalDurationMillis;
+    private final long totalDurationTimeMs;
 
     public RaceSettings() {
        this("",RaceValidator.MIN_SCORES);
@@ -22,7 +22,7 @@ public class RaceSettings {
     public RaceSettings(String raceName, int targetScore) {
         this.raceName = raceName;
         this.targetScore = targetScore;
-        this.totalDurationMillis = (long) targetScore * 600;
+        this.totalDurationTimeMs = (long) targetScore * 600;
     }
 
     public void setDefaultName() {

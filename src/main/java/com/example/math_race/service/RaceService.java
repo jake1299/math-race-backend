@@ -48,7 +48,7 @@ public class RaceService {
             throw new LogicException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
 
-        if (findAccountByIdInOpenRace(user.getId()+"") != null) {
+        if (findAccountByIdInOpenRace(user.getId().toString()) != null) {
             throw new LogicException(ErrorCode.USER_ALREADY_IN_RACE);
         }
 
@@ -67,8 +67,11 @@ public class RaceService {
         while (allRaces.containsKey(raceManager.getRoomCode())){
             raceManager.updateRoomCode();
         }
-        accountIdToOpenRoomCode.put(user.getId()+"", raceManager.getRoomCode());
+        accountIdToOpenRoomCode.put(user.getId().toString(), raceManager.getRoomCode());
         allRaces.put(raceManager.getRoomCode(), raceManager);
+
+
+        fullRace(true,raceManager);
 
         return new CreateRaceResponse(
                 raceSettings.getRaceName(),
@@ -77,6 +80,15 @@ public class RaceService {
                 nickname,
                 joinToken
         );
+    }
+
+    public void fullRace(boolean toDo, RaceManager race){
+        if (toDo){
+            for (int i = 0; i < RaceManager.MAX_PLAYERS; i++) {
+                race.joinRace(new RacePlayer("stam" + UUID.randomUUID().toString().substring(0, 8), "", "", createNickname()));
+            }
+        }
+
     }
 
     public RaceInfoResponse raceInfo(RaceInfoRequest request, RequestMetadata metadata){
@@ -89,7 +101,7 @@ public class RaceService {
             }
             accountId = metadata.getGuestId();
         }else {
-            accountId = user.getId()+"";
+            accountId = user.getId().toString();
         }
 
         RaceManager raceManager =  findOpenRaceByRoomCode(request.getRoomCode());
@@ -118,7 +130,7 @@ public class RaceService {
                 throw new LogicException(ErrorCode.INVALID_TOKEN);
             }
         } else {
-            accountId =  user.getId()+"";
+            accountId =  user.getId().toString();
             nickname = request.getNickname() != null && !request.getNickname().isEmpty() ?
                     request.getNickname() : user.getUsername();
         }
