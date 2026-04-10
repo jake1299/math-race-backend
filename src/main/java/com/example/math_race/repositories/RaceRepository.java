@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Transactional
 @Repository
 public class RaceRepository extends BaseRepository{
@@ -18,12 +20,19 @@ public class RaceRepository extends BaseRepository{
         super(sf);
     }
 
-    public void saveRaceToHistory(RaceManager race){
+    public void saveRaceToHistory(RaceManager race) {
         RaceHistoryEntity raceHistoryEntity = new RaceHistoryEntity(race);
         save(raceHistoryEntity);
-        for (RacePlayer player : race.getPlayers().values()){
-            RaceParticipantHistoryEntity raceParticipantHistory = new RaceParticipantHistoryEntity(raceHistoryEntity, player);
+
+        List<RacePlayer> rankedPlayers = race.getRankedPlayers();
+        int currentRank = 1;
+
+        for (RacePlayer player : rankedPlayers) {
+            RaceParticipantHistoryEntity raceParticipantHistory =
+                    new RaceParticipantHistoryEntity(raceHistoryEntity, player, currentRank);
+
             save(raceParticipantHistory);
+            currentRank++;
         }
     }
 }

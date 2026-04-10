@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 
 import java.util.UUID;
@@ -132,7 +133,10 @@ public class AuthService {
 
     @Transactional
     public void userChangePassword(ChangePasswordRequest request, RequestMetadata metadata) {
-        TokenEntity token = tokenRepository.findByToken(metadata.getAuthorization());
+        TokenEntity token = null;
+        if (StringUtils.hasText(metadata.getAuthorization())) {
+            token = tokenRepository.findByToken(metadata.getAuthorization());
+        }
 
         if (token == null || !token.isValid() || token.isDeleted() || token.getType() != SESSION) {
             throw new LogicException(ErrorCode.INVALID_TOKEN);
@@ -176,18 +180,54 @@ public class AuthService {
         tokenRepository.invalidateTokensByUserAndType(user, SESSION);
     }
 
-    public UserEntity getActiveUserByToken(String tokenUser) {
-        TokenEntity token = tokenRepository.findByToken(tokenUser);
+    public UserEntity getActiveUserByToken(RequestMetadata metadata) {
+       return getActiveUserByToken(metadata.getAuthorization());
+    }
+
+    public UserEntity getActiveUserByToken(String userToken) {
+        if (!StringUtils.hasText(userToken)) {
+            return null;
+        }
+
+        TokenEntity token = tokenRepository.findByToken(userToken);
         if (token != null && token.isValid() && !token.isDeleted() && token.getType() == SESSION &&
-                !token.getUser().isDeleted()) {
+                !token.getUser().isDeleted() && token.getUser().isVerified()) {
             return token.getUser();
         }
+
         return null;
+    }
+
+    public UserEntity getValidUser(RequestMetadata metadata) {
+        TokenEntity token = null;
+        if (StringUtils.hasText(metadata.getAuthorization())) {
+            token = tokenRepository.findByToken(metadata.getAuthorization());
+        }
+
+        if (token == null || !token.isValid() || token.isDeleted() || token.getType() != SESSION) {
+            throw new LogicException(ErrorCode.INVALID_TOKEN);
+        }
+
+        UserEntity user = token.getUser();
+
+        if (user.isDeleted()) {
+            throw new LogicException(ErrorCode.ACCOUNT_NOT_FOUND);
+        }
+
+        if (!user.isVerified()){
+            throw new LogicException(ErrorCode.ACCOUNT_NOT_VERIFIED);
+        }
+
+        return user;
     }
 
     public CreateGuestIdResponse createGuestId(){
         String newGuestId = "Guest-" + UUID.randomUUID().toString().substring(0,10);
 
         return new CreateGuestIdResponse(newGuestId,30);
+    }
+
+    public boolean isValidGuestId(String guestId) {
+        return guestId.startsWith("Guest-") && guestId.length() == 16;
     }
 }

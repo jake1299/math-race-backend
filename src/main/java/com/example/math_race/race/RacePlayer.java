@@ -15,9 +15,17 @@ public class RacePlayer extends RaceAccount{
     private long questionRemainingTimeMs;
     private long questionStartTimeAtMs;
     private int currentScore;
+
     private int regularQAttempts;
     private int regularQSuccesses;
     private long regularQTimeMs;
+    private int maxRegularStreak;
+    private int currentRegularStreak;
+    private long regularSuccessTimeMs;
+
+    private int junctionsOfferedCount;
+    private int autostradaChoices;
+    private int dirtRoadChoices;
 
     public RacePlayer(String accountId, String sessionActive, String joinToken ,String nickname){
         this(accountId,null,sessionActive,joinToken,nickname);
@@ -31,6 +39,14 @@ public class RacePlayer extends RaceAccount{
         super(accountId,user,sessionActive,joinToken,nickname);
         this.currentScore = 0;
         this.regularQAttempts = 0;
+        this.regularQSuccesses = 0;
+        this.regularQTimeMs = 0;
+        this.maxRegularStreak = 0;
+        this.regularSuccessTimeMs = 0;
+        this.currentRegularStreak = 0;
+        this.junctionsOfferedCount = 0;
+        this.autostradaChoices = 0;
+        this.dirtRoadChoices = 0;
     }
 
     public boolean checkAnswer(String answer){
@@ -63,6 +79,26 @@ public class RacePlayer extends RaceAccount{
 
     public void addRegularTimeMs(long timeMs) {
         this.regularQTimeMs += timeMs;
+    }
+
+    public void addRegularStreak(int streak) {
+        this.currentRegularStreak += streak;
+    }
+
+    public void addRegularSuccessTimeMs(long timeMs) {
+        this.regularSuccessTimeMs += timeMs;
+    }
+
+    public void addJunctionsOfferedCount() {
+        this.junctionsOfferedCount += 1;
+    }
+
+    public void addAutostradaChoices() {
+        this.autostradaChoices += 1;
+    }
+
+    public void addDirtRoadChoices() {
+        this.dirtRoadChoices += 1;
     }
 
     public long getQuestionTimeSpent() {

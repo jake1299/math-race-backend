@@ -1,4 +1,4 @@
-package com.example.math_race.dto.request;
+package com.example.math_race.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RaceInfoRequest {
-    private  String roomCode;
+public class ProfileResponse {
+
+    private String username;
+    private String email;
 }

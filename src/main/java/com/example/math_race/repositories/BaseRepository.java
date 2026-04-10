@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +36,8 @@ public class BaseRepository {
         this.sessionFactory.getCurrentSession().remove(object);
     }
 
-    public <T> T loadObject(Class<T> clazz, int oid) {
+
+    public <T, ID extends Serializable> T loadObject(Class<T> clazz, ID oid) {
         return this.sessionFactory.getCurrentSession().get(clazz, oid);
     }
 

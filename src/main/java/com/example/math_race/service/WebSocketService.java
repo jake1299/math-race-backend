@@ -50,6 +50,10 @@ public class WebSocketService {
         sendToQueueSession(path, WsMessage.createError(errorCode),accessor.getUser().getName(),accessor.getSessionId());
     }
 
+    public void sendErrorToQueueSession(String path, ErrorCode errorCode, String msg,StompHeaderAccessor accessor) {
+        sendToQueueSession(path, WsMessage.createError(errorCode,msg),accessor.getUser().getName(),accessor.getSessionId());
+    }
+
     public void sendErrorToQueueSession(String path, ErrorCode errorCode, String userId, String sessionId) {
         sendToQueueSession(path, WsMessage.createError(errorCode),userId,sessionId);
     }
@@ -115,11 +119,5 @@ public class WebSocketService {
 
     public String getRaceUpdatesTopic(String roomCode) {
         return TOPIC_RACE_PREFIX + roomCode + "/updates";
-    }
-
-    @MessageExceptionHandler(LogicException.class)
-    @SendToUser("queue/notifications") // שולח רק למשתמש שעשה את השגיאה
-    public void handleLogicException(LogicException ex) {
-
     }
 }

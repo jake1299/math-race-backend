@@ -4,10 +4,9 @@ import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.exception.LogicException;
 import lombok.Data;
 
-import java.util.Objects;
-import java.util.UUID;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Data
 public class RaceManager {
@@ -18,6 +17,7 @@ public class RaceManager {
 
     private RaceHost host;
     private final Map<String, RacePlayer> players;
+    private RaceStatistics statistics;
 
     private UUID id;
     private RaceStatus status;
@@ -36,6 +36,7 @@ public class RaceManager {
         updateRoomCode();
 
         this.players = new ConcurrentHashMap<>();
+        this.statistics = new RaceStatistics(this);
 
         this.remainingTimeMs = raceSettings.getTotalDurationTimeMs();
         this.lastResumedAtMs = 0;
@@ -95,6 +96,16 @@ public class RaceManager {
             this.totalPausedDurationTimeMs += duration;
             this.lastPausedAtMs = 0;
         }
+    }
+
+    public void updateStatistics() {
+        this.statistics = new RaceStatistics(this);
+    }
+
+    public List<RacePlayer> getRankedPlayers() {
+        return this.players.values().stream()
+                .sorted(Comparator.comparingInt(RacePlayer::getCurrentScore).reversed())
+                .collect(Collectors.toList());
     }
 
     public boolean isHost(String accountId) {

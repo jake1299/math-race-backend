@@ -28,6 +28,15 @@ public class WsMessage<T> {
                 .build();
     }
 
+    public static WsMessage<Void> createError(ErrorCode error, String msg) {
+        return WsMessage.<Void>builder()
+                .type("ERROR")
+                .content(error.name())
+                .code(error.getCode())
+                .message(msg)
+                .build();
+    }
+
     public static <T> WsMessage<T> generalMessage(String message) {
         return WsMessage.<T>builder()
                 .type("GENERAL_MESSAGE")

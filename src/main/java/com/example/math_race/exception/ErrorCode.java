@@ -16,7 +16,7 @@ public enum ErrorCode {
     PASSWORD_SAME_AS_OLD(1008, "New password cannot be the same as the current password!"),
 
     // Token & Security Errors (1100 Series)
-    INVALID_TOKEN(1100, "The verification token is invalid or has expired."),
+    INVALID_TOKEN(1100, "The token is invalid or has expired."),
 
     // Email Specific Errors (1200 Series)
     EMAIL_SEND_FAILED(1200, "Failed to send email. Please try again later."),
@@ -47,6 +47,8 @@ public enum ErrorCode {
     NOT_RACE_PLAYER(1416, "Only player on the race is allowed to perform this action!"),
     RACE_ALREADY_INITIALIZED(1417, "The race has already been initialized!"),
     NOT_ENOUGH_PLAYERS_TO_START(1418, "At least 2 players are required to start the race!"),
+    RACE_HISTORY_ACCESS_DENIED(1419, "You are not authorized to view the history of this race!"),
+    RACE_HISTORY_NOT_FOUND(1420, "The requested race history does not exist or has been deleted."),
 
     // System Errors
     INTERNAL_ERROR(9000, "An unexpected error occurred"),

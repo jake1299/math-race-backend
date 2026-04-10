@@ -356,7 +356,6 @@ public class QuestionEngine {
         return result;
     }
 
-
     private <T extends MatchableTag> T getRandomMatch(List<T> dataList, Map<String, String> constraints, Class<T> clazz) {
         List<T> matches = dataList.stream()
                 .filter(item -> item.matches(constraints))

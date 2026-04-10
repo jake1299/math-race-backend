@@ -65,20 +65,18 @@
             <generator class="org.hibernate.id.UUIDGenerator"/>
         </id>
 
+        <property name="hostId" type="string" column="host_id" index="idx_race_host_deleted" not-null="true"/>
+        <property name="hostNickname" type="string" column="host_nickname" not-null="true"/>
+
         <property name="name" type="string" column="race_name" not-null="true"/>
         <property name="roomCode" type="string" column="room_code" not-null="true"/>
         <property name="targetScore" type="int" column="target_score" not-null="true"/>
 
-        <property name="createdAtMillis" type="long" column="created_at_millis" not-null="true"/>
-        <property name="endedAtMillis" type="long" column="ended_at_millis" not-null="true"/>
+        <property name="createdAtMs" type="long" column="created_at_millis" not-null="true"/>
+        <property name="endedAtMs" type="long" column="ended_at_millis" not-null="true"/>
         <property name="totalDurationMillis" type="long" column="total_duration_millis" not-null="true"/>
         <property name="totalPausedDurationMillis" type="long" column="total_paused_duration_millis" not-null="true"/>
-
-        <many-to-one name="host"
-                     class="com.example.math_race.entities.UserEntity"
-                     column="host_id"
-                     not-null="true"
-                     fetch="join"/>
+        <property name="totalParticipants" type="int" column="total_participants" not-null="true"/>
 
         <property name="status" column="race_status" not-null="true">
             <type name="org.hibernate.type.EnumType">
@@ -86,6 +84,24 @@
                 <param name="useNamed">true</param>
             </type>
         </property>
+
+        <property name="streakMasterId" type="string" column="streak_master_id"/>
+        <property name="streakMasterNickname" type="string" column="streak_master_nickname"/>
+        <property name="streakMasterAmount" type="int" column="streak_master_amount" not-null="true"/>
+
+        <property name="accuracyKingId" type="string" column="accuracy_king_id"/>
+        <property name="accuracyKingNickname" type="string" column="accuracy_king_nickname"/>
+        <property name="accuracyKingPercentage" type="double" column="accuracy_king_percentage" not-null="true"/>
+
+        <property name="speedDemonId" type="string" column="speed_demon_id"/>
+        <property name="speedDemonNickname" type="string" column="speed_demon_nickname"/>
+        <property name="speedDemonTimeMs" type="double" column="speed_demon_time_ms" not-null="true"/>
+
+        <property name="accuracyPercentage" type="double" column="accuracy_percentage" not-null="true"/>
+        <property name="autostradaPercentage" type="double" column="autostrada_percentage" not-null="true"/>
+        <property name="dirtRoadPercentage" type="double" column="dirt_road_percentage" not-null="true"/>
+        <property name="averageResponseTimeMs" type="long" column="average_response_time_ms" not-null="true"/>
+        <property name="totalJunctionsOffered" type="int" column="total_junctions_offered" not-null="true"/>
 
         <property name="creationDate" type="java.util.Date" column="creation_date" not-null="true"/>
         <property name="updatedDate" type="java.util.Date" column="updated_date"/>
@@ -101,14 +117,30 @@
 
         <many-to-one name="race"
                      class="com.example.math_race.entities.RaceHistoryEntity"
-                     column="race_id"
-                     not-null="true" />
+                     not-null="true">
+            <column name="race_id" index="idx_participant_race_id" />
+        </many-to-one>
+
         <many-to-one name="user"
                      class="com.example.math_race.entities.UserEntity"
-                     column="user_id"
-                     not-null="false"/>
+                     not-null="false">
+            <column name="user_id" index="idx_participant_user_id" />
+        </many-to-one>
+
+        <property name="guestId" type="string" column="guest_id" not-null="false"/>
         <property name="nickname" type="string" column="nick_name" not-null="true"/>
         <property name="finalScore" type="int" column="final_score" not-null="true"/>
+        <property name="rank" type="int" column="player_rank" not-null="true"/>
+
+        <property name="regularQAttempts" type="int" column="regular_q_attempts" not-null="true"/>
+        <property name="regularQSuccesses" type="int" column="regular_q_successes" not-null="true"/>
+        <property name="regularQTimeMs" type="long" column="regular_q_time_ms" not-null="true"/>
+        <property name="maxRegularStreak" type="int" column="max_regular_streak" not-null="true"/>
+        <property name="regularSuccessTimeMs" type="long" column="regular_success_time_ms" not-null="true"/>
+
+        <property name="junctionsOfferedCount" type="int" column="junctions_offered_count" not-null="true"/>
+        <property name="autostradaChoices" type="int" column="autostrada_choices" not-null="true"/>
+        <property name="dirtRoadChoices" type="int" column="dirt_road_choices" not-null="true"/>
 
         <property name="creationDate" type="java.util.Date" column="creation_date" not-null="true"/>
         <property name="updatedDate" type="java.util.Date" column="updated_date"/>

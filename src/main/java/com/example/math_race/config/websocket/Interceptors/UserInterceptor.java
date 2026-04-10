@@ -77,7 +77,7 @@ public class UserInterceptor implements ChannelInterceptor {
                 throw new MessageDeliveryException(ErrorCode.AUTH_FAILED.name());
             }
             accessor.setUser(new UserPrincipal(String.valueOf(user.getId())));
-        } else if (guestId != null && guestId.startsWith("Guest-") && guestId.length() == 16) {
+        } else if (guestId != null && authService.isValidGuestId(guestId)) {
             accessor.setUser(new UserPrincipal(guestId));
         } else {
             throw new MessageDeliveryException(ErrorCode.MISSING_IDENTIFICATION.name());

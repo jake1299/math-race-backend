@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,11 +43,7 @@ public class RaceService {
     }
 
     public CreateRaceResponse creatRace(CreateRaceRequest request, RequestMetadata metadata){
-        UserEntity user = authService.getActiveUserByToken(metadata.getAuthorization());
-
-        if (user == null) {
-            throw new LogicException(ErrorCode.ACCOUNT_NOT_FOUND);
-        }
+        UserEntity user = authService.getValidUser(metadata);
 
         if (findAccountByIdInOpenRace(user.getId().toString()) != null) {
             throw new LogicException(ErrorCode.USER_ALREADY_IN_RACE);
@@ -71,7 +68,7 @@ public class RaceService {
         allRaces.put(raceManager.getRoomCode(), raceManager);
 
 
-        fullRace(true,raceManager);
+        fullRace(false,raceManager);
 
         return new CreateRaceResponse(
                 raceSettings.getRaceName(),
@@ -91,12 +88,12 @@ public class RaceService {
 
     }
 
-    public RaceInfoResponse raceInfo(RaceInfoRequest request, RequestMetadata metadata){
-        UserEntity user = authService.getActiveUserByToken(metadata.getAuthorization());
+    public RaceInfoResponse raceInfo(String roomCode, RequestMetadata metadata){
+        UserEntity user = authService.getActiveUserByToken(metadata);
         String accountId;
 
         if (user == null) {
-            if (metadata.getGuestId() == null) {
+            if (!StringUtils.hasText(metadata.getGuestId())) {
                 throw new LogicException(ErrorCode.INVALID_TOKEN);
             }
             accountId = metadata.getGuestId();
@@ -104,7 +101,7 @@ public class RaceService {
             accountId = user.getId().toString();
         }
 
-        RaceManager raceManager =  findOpenRaceByRoomCode(request.getRoomCode());
+        RaceManager raceManager =  findOpenRaceByRoomCode(roomCode);
 
         if (raceManager == null)
             throw new LogicException(ErrorCode.RACE_NOT_FOUND);
@@ -118,20 +115,21 @@ public class RaceService {
         return new RaceInfoResponse(account,raceManager);
     }
 
-    public JoinRaceResponse joinRace(JoinRaceRequest request, RequestMetadata metadata){
+    public JoinRaceResponse joinRace(String roomCode, JoinRaceRequest request, RequestMetadata metadata){
         String accountId, nickname;
-        UserEntity user = authService.getActiveUserByToken(metadata.getAuthorization());
+        UserEntity user = authService.getActiveUserByToken(metadata);
+
         if (user == null) {
-            if (metadata.getGuestId() != null) {
+            if (StringUtils.hasText(metadata.getGuestId()) && authService.isValidGuestId(metadata.getGuestId())) {
                 accountId = metadata.getGuestId();
-                nickname = request.getNickname() != null && !request.getNickname().isEmpty() ?
+                nickname = StringUtils.hasText(request.getNickname()) ?
                         request.getNickname() : createNickname();
             }else {
                 throw new LogicException(ErrorCode.INVALID_TOKEN);
             }
         } else {
             accountId =  user.getId().toString();
-            nickname = request.getNickname() != null && !request.getNickname().isEmpty() ?
+            nickname = StringUtils.hasText(request.getNickname()) ?
                     request.getNickname() : user.getUsername();
         }
 
@@ -140,7 +138,7 @@ public class RaceService {
         String joinToken = UUID.randomUUID().toString().substring(0, 10);
 
         if (raceManager == null){
-            raceManager = findRaceByRoomCode(request.getRoomCode());
+            raceManager = findRaceByRoomCode(roomCode);
             if (raceManager == null || raceManager.getStatus().isClosed()){
                 throw new LogicException(ErrorCode.RACE_NOT_FOUND);
             }
@@ -151,7 +149,7 @@ public class RaceService {
             raceManager.joinRace(new RacePlayer(accountId,user,null,joinToken,nickname));
             accountIdToOpenRoomCode.put(accountId, raceManager.getRoomCode());
 
-        } else if (raceManager.getRoomCode().equals(request.getRoomCode())){
+        } else if (raceManager.getRoomCode().equals(roomCode)){
 
             RaceAccount account = raceManager.getAccount(accountId);
 

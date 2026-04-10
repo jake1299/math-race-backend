@@ -117,22 +117,29 @@ public class RaceEngineService {
                 timer.cancel(false);
             }
 
+            long timeSpent = player.getQuestionTimeSpent();
+            player.addRegularTimeMs(timeSpent);
+
             player.addRegularAttempt();
-            player.addRegularTimeMs(player.getQuestionTimeSpent());
 
             boolean isCorrect = player.checkAnswer(answer);
             int addScore;
             if (isCorrect) {
                 addScore = player.getCurrentQuestion().getScore();
-                player.addScore(addScore);
                 player.addRegularSuccess();
+                player.addRegularStreak(1);
+                player.addRegularSuccessTimeMs(timeSpent);
+                if (player.getCurrentRegularStreak() > player.getMaxRegularStreak()){
+                    player.setMaxRegularStreak(player.getCurrentRegularStreak());
+                    //לשלוח הודעה לכול מי שצריך אולי לנתיב הראשי על רצף חם של מעל 5
+                }
             } else {
                 addScore = -(int) (player.getCurrentQuestion().getScore() * 0.2);
                 if (player.getCurrentScore() + addScore < 0)
                     addScore = 0;
-                player.addScore(addScore);
-
+                player.setCurrentRegularStreak(0);
             }
+            player.addScore(addScore);
 
             AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(addScore, player.getId());
 
@@ -165,6 +172,7 @@ public class RaceEngineService {
 
             player.addRegularAttempt();
             player.addRegularTimeMs(player.getQuestionTimeSpent());
+            player.setCurrentRegularStreak(0);
 
             playerQuestionTimers.remove(player.getId());
             player.setCurrentQuestion(null);
