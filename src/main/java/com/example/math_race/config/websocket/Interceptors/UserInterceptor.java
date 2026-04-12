@@ -37,7 +37,6 @@ public class UserInterceptor implements ChannelInterceptor {
     private final AuthService authService;
     private final WebSocketService webSocketService;
     private final RaceService raceService;
-    private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final AntPathMatcher matcher;
 
     @Autowired
@@ -45,7 +44,6 @@ public class UserInterceptor implements ChannelInterceptor {
         this.authService = authService;
         this.webSocketService = webSocketService;
         this.raceService = raceService;
-        this.webSocketSessionRegistry = webSocketSessionRegistry;
         this.matcher = new AntPathMatcher();
     }
 
@@ -69,7 +67,7 @@ public class UserInterceptor implements ChannelInterceptor {
 
     private void handleConnect(StompHeaderAccessor accessor) {
         String auth = accessor.getFirstNativeHeader("Authorization");
-        String guestId = accessor.getFirstNativeHeader("GuestID");
+        String guestToken = accessor.getFirstNativeHeader("GuestToken");
 
         if (auth != null && auth.startsWith("Bearer ")) {
             UserEntity user = authService.getActiveUserByToken(auth.substring(7));
@@ -77,8 +75,12 @@ public class UserInterceptor implements ChannelInterceptor {
                 throw new MessageDeliveryException(ErrorCode.AUTH_FAILED.name());
             }
             accessor.setUser(new UserPrincipal(String.valueOf(user.getId())));
-        } else if (guestId != null && authService.isValidGuestId(guestId)) {
-            accessor.setUser(new UserPrincipal(guestId));
+        } else if (guestToken != null) {
+            String guestID = authService.getGuestIdByToken(guestToken);
+            if (guestID == null) {
+                throw new MessageDeliveryException(ErrorCode.MISSING_IDENTIFICATION.name());
+            }
+            accessor.setUser(new UserPrincipal(guestID));
         } else {
             throw new MessageDeliveryException(ErrorCode.MISSING_IDENTIFICATION.name());
         }
@@ -127,7 +129,7 @@ public class UserInterceptor implements ChannelInterceptor {
                     account.containsJoinToken() && account.getJoinToken().equals(incomingToken)) {
 
                 if (account.isConnected() && !account.getSessionActive().equals(accessor.getSessionId())) {
-                    webSocketSessionRegistry.forceDisconnect(account.getSessionActive(),ErrorCode.DUPLICATE_RACE_CONNECTION);
+                    webSocketService.removeSession(account.getId(),account.getSessionActive(),ErrorCode.DUPLICATE_RACE_CONNECTION);
                 }
 
                 if (incomingToken != null && incomingToken.equals(account.getJoinToken())) {

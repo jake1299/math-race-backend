@@ -4,6 +4,8 @@ import com.example.math_race.dto.wsMessage.response.AnswerScoreDTO;
 import com.example.math_race.dto.wsMessage.response.MathQuestionDTO;
 import com.example.math_race.dto.wsMessage.response.RaceResultsDTO;
 import com.example.math_race.dto.wsMessage.response.StatusChangedDTO;
+import com.example.math_race.exception.ErrorCode;
+import com.example.math_race.race.JunctionEngine;
 import com.example.math_race.race.RaceManager;
 import com.example.math_race.race.RacePlayer;
 import com.example.math_race.race.RaceStatus;
@@ -12,6 +14,7 @@ import com.example.math_race.race.questions.MathQuestionGenerator;
 import com.example.math_race.repositories.RaceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -31,19 +34,24 @@ public class RaceEngineService {
     private final WebSocketService webSocketService;
     private final MathQuestionGenerator mathQuestionGenerator;
     private final RaceRepository raceRepository;
+    private final JunctionEngine junctionEngine;
+    private final RaceService raceService;
 
     private final Map<String, ScheduledFuture<?>> raceEndTimers = new ConcurrentHashMap<>();
     private final Map<String, ScheduledFuture<?>> playerQuestionTimers = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> playerJunctionQuesTimers = new ConcurrentHashMap<>();
 
     @Autowired
     public RaceEngineService(
             @Qualifier(GAME_SCHEDULER_BEAN_NAME) ThreadPoolTaskScheduler scheduler, WebSocketService webSocketService,
-            MathQuestionGenerator mathQuestionGenerator,  RaceRepository raceRepository) {
+            MathQuestionGenerator mathQuestionGenerator,  RaceRepository raceRepository, JunctionEngine junctionEngine, @Lazy RaceService raceService) {
 
         this.scheduler = scheduler;
         this.webSocketService = webSocketService;
         this.mathQuestionGenerator = mathQuestionGenerator;
         this.raceRepository = raceRepository;
+        this.junctionEngine = junctionEngine;
+        this.raceService = raceService;
     }
 
     public void startRace(RaceManager race) {
@@ -68,6 +76,38 @@ public class RaceEngineService {
            sendNextQuestionToPlayer(race,player);
         }
     }
+
+    private void processNextStep(RaceManager race, RacePlayer player){
+        if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
+
+        synchronized (player) {
+
+            if (player.getCurrentQuestion() != null) {
+                return;
+            }
+
+            if (player.isInJunction()){
+                if (player.isChooseAutostrada()  || player.getJunctionQuesNum() >= 10){
+                    player.setInJunction(false);
+                    player.setJunctionQuesNum(0);
+                }else {
+                    player.addJunctionQuesNum(1);
+                }
+
+            }else {
+
+                boolean enterToJunction = junctionEngine.shouldTriggerJunction(player, race);
+                if (enterToJunction) {
+
+                } else {
+
+                }
+            }
+
+        }
+    }
+
+
 
     public void sendNextQuestionToPlayer(RaceManager race,RacePlayer player) {
         if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
@@ -265,14 +305,14 @@ public class RaceEngineService {
 
     private void finishRace(RaceManager race) {
         if (!race.getStatus().isRunning()) return;
-        // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
 
         race.setStatus(RaceStatus.FINISHED);
         race.setEndedAtMs(System.currentTimeMillis());
 
-        raceEndTimers.remove(race.getId().toString());
-        clearAllPlayerTimersForRoom(race);
-        saveRace(race);
+        ScheduledFuture<?> endTask = raceEndTimers.remove(race.getId().toString());
+        if (endTask != null) {
+            endTask.cancel(false);
+        }
 
         RaceResultsDTO resultsDTO = new RaceResultsDTO(race);
 
@@ -280,6 +320,7 @@ public class RaceEngineService {
         webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_COMPLETED",resultsDTO,
                 race.getHost().getId(),race.getHost().getSessionActive());
 
+        endRace(race);
     }
 
     public void cancelledRace(RaceManager race) {
@@ -289,8 +330,6 @@ public class RaceEngineService {
            race.finalizeCurrentPause();
         }
 
-        // צריך לדאוג לשמור ל DB וגם לנתק אותם מ WS
-
         race.setStatus(RaceStatus.CANCELLED);
         race.setEndedAtMs(System.currentTimeMillis());
 
@@ -299,15 +338,27 @@ public class RaceEngineService {
             endTask.cancel(false);
         }
 
-        clearAllPlayerTimersForRoom(race);
-        saveRace(race);
-
         StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.CANCELLED);
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),"RACE_CANCELLED",statusChangedDTO);
         webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",statusChangedDTO,
                 race.getHost().getId(),race.getHost().getSessionActive());
 
+        endRace(race);
+    }
+
+    private void endRace(RaceManager race){
+        saveRace(race);
+        clearAllPlayerTimersForRoom(race);
+        kickFromWs(race);
+        raceService.removeRace(race);
+    }
+
+    private void kickFromWs(RaceManager race){
+        for (RacePlayer player : race.getPlayers().values()) {
+            webSocketService.removeSession(player.getId(),player.getSessionActive(), ErrorCode.RACE_ALREADY_FINISHED);
+        }
+        webSocketService.removeSession(race.getHost().getId(),race.getHost().getSessionActive(),ErrorCode.RACE_ALREADY_FINISHED);
     }
 
     private void saveRace(RaceManager race) {

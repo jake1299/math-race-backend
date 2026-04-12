@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 @Transactional
@@ -22,33 +21,33 @@ public class BaseRepository {
         this.sessionFactory = sf;
     }
 
-
     public void save(Object object) {
         this.sessionFactory.getCurrentSession().saveOrUpdate(object);
     }
 
-    public void save(BaseEntity baseEntity) {
-        baseEntity.setUpdatedDate(new Date());
-        this.sessionFactory.getCurrentSession().saveOrUpdate(baseEntity);
+    public void save(BaseEntity entity) {
+        if (entity.getId() == null) {
+            getCurrentSession().persist(entity);
+        } else {
+            getCurrentSession().merge(entity);
+        }
     }
 
     public void remove(Object object) {
         this.sessionFactory.getCurrentSession().remove(object);
     }
 
-
     public <T, ID extends Serializable> T loadObject(Class<T> clazz, ID oid) {
         return this.sessionFactory.getCurrentSession().get(clazz, oid);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> List<T> loadList(Class<T> clazz) {
         return this.sessionFactory.getCurrentSession()
                 .createQuery("FROM " + clazz.getSimpleName(), clazz)
                 .list();
     }
 
-    public <T> void saveAll(List<T> objects) {
+    public <T extends BaseEntity> void saveAll(List<T> objects) {
         for (T object : objects) {
             save(object);
         }

@@ -50,6 +50,9 @@ public enum ErrorCode {
     RACE_HISTORY_ACCESS_DENIED(1419, "You are not authorized to view the history of this race!"),
     RACE_HISTORY_NOT_FOUND(1420, "The requested race history does not exist or has been deleted."),
 
+    // Connection & Session Errors (1500 Series)
+    INTENTIONAL_DISCONNECT(1500, "The connection was closed intentionally."),
+
     // System Errors
     INTERNAL_ERROR(9000, "An unexpected error occurred"),
     NOT_FOUND(9001, "This page is not found.");
