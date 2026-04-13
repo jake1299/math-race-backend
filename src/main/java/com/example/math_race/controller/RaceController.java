@@ -5,6 +5,7 @@ import com.example.math_race.dto.response.ApiResponse;
 import com.example.math_race.dto.response.CreateRaceResponse;
 import com.example.math_race.dto.response.JoinRaceResponse;
 import com.example.math_race.dto.response.RaceInfoResponse;
+import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.service.RaceService;
@@ -32,6 +33,11 @@ public class RaceController {
     @MessageMapping("/race/{roomCode}/player/submit")
     public void handleSubmit(@DestinationVariable String roomCode, @Valid @Payload SubmitQuestionRequest request , StompHeaderAccessor accessor) {
         raceService.handleSubmitQuestion(roomCode,request, accessor);
+    }
+
+    @MessageMapping("/race/{roomCode}/player/junction/choose")
+    public void handleJunctionChoose(@DestinationVariable String roomCode, @Valid @Payload JunctionChooseRequest request , StompHeaderAccessor accessor) {
+        raceService.handleJunctionChoose(roomCode, request, accessor);
     }
 
     @MessageMapping("/race/{roomCode}/host/start")

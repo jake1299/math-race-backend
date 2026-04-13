@@ -1,5 +1,6 @@
 package com.example.math_race.service;
 
+import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.dto.wsMessage.response.PlayerJoinedDTO;
 import com.example.math_race.dto.wsMessage.response.RaceStateDTO;
@@ -159,6 +160,12 @@ public class RaceService {
                 raceManager.getRoomCode(),isHost ? "HOST" : "PLAYER",raceManager.getSettings().getTargetScore());
     }
 
+    public void handleJunctionChoose(String roomCode, JunctionChooseRequest request, StompHeaderAccessor accessor){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (race.getStatus().isRunning()){
+            raceEngineService.handleJunctionChoice(race,race.getPlayer(accessor.getUser().getName()),request.getChoice());
+        }
+    }
 
     public void handleSubmitQuestion(String roomCode, SubmitQuestionRequest request, StompHeaderAccessor accessor){
         RaceManager race = findOpenRaceByRoomCode(roomCode);

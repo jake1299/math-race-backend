@@ -14,7 +14,8 @@ public class MainIdan {
 
         //[HUMAN:g=m:#1] [VERB:id=buy:(past_+(#1:g)+_s)]
         // past_male_p/s
-        String tem = "[HUMAN:n:#n] [VERB:id=buy:(past_+(#n:g)+_s):#r]";
+
+        String tem = "[HUMAN:#r] [VERB:id=buy:(past_+(#n:g)+_s):#r]";
         //N =NAME
         //G =
 

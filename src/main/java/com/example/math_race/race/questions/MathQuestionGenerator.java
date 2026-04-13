@@ -1340,9 +1340,9 @@ public class MathQuestionGenerator {
     }
 
 
-
-
     public MathQuestion generateForPlayer(RacePlayer player) {
-        return questionEngine.processTemplate(questionTemplateService.getTemplateByDifficulty("medium"));
+        String level = player.getTrackState().getLevel();
+        if (level.isEmpty()) return null;
+        return questionEngine.processTemplate(questionTemplateService.getTemplateByDifficulty(level));
     }
 }

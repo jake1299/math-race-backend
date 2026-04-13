@@ -1,14 +1,8 @@
 package com.example.math_race.service;
 
-import com.example.math_race.dto.wsMessage.response.AnswerScoreDTO;
-import com.example.math_race.dto.wsMessage.response.MathQuestionDTO;
-import com.example.math_race.dto.wsMessage.response.RaceResultsDTO;
-import com.example.math_race.dto.wsMessage.response.StatusChangedDTO;
+import com.example.math_race.dto.wsMessage.response.*;
 import com.example.math_race.exception.ErrorCode;
-import com.example.math_race.race.JunctionEngine;
-import com.example.math_race.race.RaceManager;
-import com.example.math_race.race.RacePlayer;
-import com.example.math_race.race.RaceStatus;
+import com.example.math_race.race.*;
 import com.example.math_race.race.questions.MathQuestion;
 import com.example.math_race.race.questions.MathQuestionGenerator;
 import com.example.math_race.repositories.RaceRepository;
@@ -39,7 +33,6 @@ public class RaceEngineService {
 
     private final Map<String, ScheduledFuture<?>> raceEndTimers = new ConcurrentHashMap<>();
     private final Map<String, ScheduledFuture<?>> playerQuestionTimers = new ConcurrentHashMap<>();
-    private final Map<String, ScheduledFuture<?>> playerJunctionQuesTimers = new ConcurrentHashMap<>();
 
     @Autowired
     public RaceEngineService(
@@ -73,47 +66,144 @@ public class RaceEngineService {
 
 
         for (RacePlayer player : race.getPlayers().values()) {
-           sendNextQuestionToPlayer(race,player);
+            processNextStep(race, player);
         }
     }
 
-    private void processNextStep(RaceManager race, RacePlayer player){
+    public void processNextStep(RaceManager race, RacePlayer player) {
         if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
 
         synchronized (player) {
-
-            if (player.getCurrentQuestion() != null) {
+            if (player.getCurrentQuestion() != null || (player.getTrackState() == PlayerTrackState.WAITING_FOR_CHOICE)) {
                 return;
             }
 
-            if (player.isInJunction()){
-                if (player.isChooseAutostrada()  || player.getJunctionQuesNum() >= 10){
-                    player.setInJunction(false);
-                    player.setJunctionQuesNum(0);
-                }else {
-                    player.addJunctionQuesNum(1);
-                }
+            boolean update = false;
 
-            }else {
-
-                boolean enterToJunction = junctionEngine.shouldTriggerJunction(player, race);
-                if (enterToJunction) {
-
+            if (player.getTrackState() == PlayerTrackState.AUTOSTRADA || player.getTrackState() == PlayerTrackState.DIRT_ROAD) {
+                if (player.getSpecialQuestionsRemaining() > 0) {
+                    scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
+                            Date.from(Instant.now().plusMillis(700)));
+                    return;
                 } else {
+                    player.setTrackState(PlayerTrackState.REGULAR);
 
+                    ChangeTrackDTO trackDTO = new ChangeTrackDTO(player);
+                    update = true;
+                    scheduler.schedule(() -> {
+
+                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "TRACK_STATE_CHANGED", trackDTO,
+                                player.getId(), player.getSessionActive());
+
+                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "TRACK_STATE_CHANGED_FOR_PLAYER", trackDTO,
+                                race.getHost().getId(), race.getHost().getSessionActive());
+                    },Date.from(Instant.now().plusMillis(700)));
                 }
             }
 
+            if (player.getTrackState() == PlayerTrackState.REGULAR) {
+                boolean shouldOfferJunction = junctionEngine.shouldTriggerJunction(player, race);
+
+                if (shouldOfferJunction) {
+                    scheduler.schedule(() -> sendJunctionOfferToPlayer(race, player),
+                            Date.from(Instant.now().plusMillis(update ? 1800 : 700)));
+                } else {
+                    scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
+                            Date.from(Instant.now().plusMillis(update ? 1800 : 700)));
+                }
+            }
+        }
+    }
+
+    public void sendJunctionOfferToPlayer(RaceManager race, RacePlayer player) {
+        if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
+
+        synchronized (player) {
+            player.setTrackState(PlayerTrackState.WAITING_FOR_CHOICE);
+            player.setQuestionStartTimeAtMs(System.currentTimeMillis());
+            player.setQuestionRemainingTimeMs(player.getTrackState().getTimeLimitMillis());
+
+            JunctionOfferDTO offerDTO = new JunctionOfferDTO(race,player);
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "JUNCTION_OFFERED", offerDTO,
+                    player.getId(), player.getSessionActive());
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "JUNCTION_OFFERED_TO_PLAYER", offerDTO,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+
+            ScheduledFuture<?> timeoutTask = scheduler.schedule(
+                    () -> handleJunctionTimeout(race, player),
+                    Date.from(Instant.now().plusMillis(player.getTrackState().getTimeLimitMillis()).plusMillis(700))
+            );
+
+            playerQuestionTimers.put(player.getId(), timeoutTask);
+        }
+    }
+
+    public void handleJunctionChoice(RaceManager race, RacePlayer player, String choice) {
+        if (!race.getStatus().isRunning()) return;
+
+        synchronized (player) {
+            if (player.getTrackState() != PlayerTrackState.WAITING_FOR_CHOICE) return;
+            player.addJunctionsOfferedCount();
+
+            ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
+            if (timer != null) timer.cancel(false);
+
+            if (PlayerTrackState.AUTOSTRADA.name().equalsIgnoreCase(choice)) {
+                player.setTrackState(PlayerTrackState.AUTOSTRADA);
+                player.addAutostradaChoices();
+            } else {
+                player.setTrackState(PlayerTrackState.DIRT_ROAD);
+                player.addDirtRoadChoices();
+            }
+
+            player.setSpecialQuestionsRemaining(player.getTrackState().getQuestionsNumber());
+            ChangeTrackDTO junctionChoose = new ChangeTrackDTO(player);
+
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "JUNCTION_CHOOSE", junctionChoose,
+                    player.getId(), player.getSessionActive());
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "JUNCTION_CHOOSE_FOR_PLAYER", junctionChoose,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+
+
+            processNextStep(race, player);
+        }
+    }
+
+    private void handleJunctionTimeout(RaceManager race, RacePlayer player) {
+        if (!race.getStatus().isRunning()) return;
+
+        synchronized (player) {
+            if (player.getTrackState() != PlayerTrackState.WAITING_FOR_CHOICE) {
+                return;
+            }
+            player.addJunctionsOfferedCount();
+
+            playerQuestionTimers.remove(player.getId());
+
+            player.setTrackState(PlayerTrackState.DIRT_ROAD);
+            player.setSpecialQuestionsRemaining(player.getTrackState().getQuestionsNumber());
+            player.addDirtRoadChoices();
+
+            ChangeTrackDTO junctionChoose = new ChangeTrackDTO(player);
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "JUNCTION_TIMEOUT", junctionChoose,
+                    player.getId(), player.getSessionActive());
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "JUNCTION_TIMEOUT_FOR_PLAYER", junctionChoose,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+
+            processNextStep(race, player);
         }
     }
 
 
-
-    public void sendNextQuestionToPlayer(RaceManager race,RacePlayer player) {
+    public void sendNextQuestionToPlayer(RaceManager race, RacePlayer player) {
         if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
 
         synchronized (player) {
-
             if (player.getCurrentQuestion() != null) {
                 return;
             }
@@ -124,8 +214,8 @@ public class RaceEngineService {
             }
 
             MathQuestion question = mathQuestionGenerator.generateForPlayer(player);
-            player.setCurrentQuestion(question);
 
+            player.setCurrentQuestion(question);
             player.setQuestionStartTimeAtMs(System.currentTimeMillis());
             player.setQuestionRemainingTimeMs(question.getTimeLimitMillis());
 
@@ -139,7 +229,6 @@ public class RaceEngineService {
             Instant timeoutTime = Instant.now().plusMillis(question.getTimeLimitMillis());
             ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> handleQuestionTimeout(race, player, question), Date.from(timeoutTime));
 
-
             playerQuestionTimers.put(player.getId(), timeoutTask);
         }
     }
@@ -148,7 +237,7 @@ public class RaceEngineService {
         if (!race.getStatus().isRunning()) return;
 
         synchronized (player) {
-            if (player.getCurrentQuestion() == null) {
+            if (player.getCurrentQuestion() == null || player.getTrackState().equals(PlayerTrackState.WAITING_FOR_CHOICE)) {
                 return;
             }
 
@@ -158,27 +247,36 @@ public class RaceEngineService {
             }
 
             long timeSpent = player.getQuestionTimeSpent();
-            player.addRegularTimeMs(timeSpent);
+            if (!player.getTrackState().equals(PlayerTrackState.REGULAR)) {
+                player.subSpecialQuestionsRemaining();
+            }else {
+                player.addRegularTimeMs(timeSpent);
+                player.addRegularAttempt();
+            }
 
-            player.addRegularAttempt();
 
             boolean isCorrect = player.checkAnswer(answer);
             int addScore;
             if (isCorrect) {
                 addScore = player.getCurrentQuestion().getScore();
-                player.addRegularSuccess();
-                player.addRegularStreak(1);
-                player.addRegularSuccessTimeMs(timeSpent);
-                if (player.getCurrentRegularStreak() > player.getMaxRegularStreak()){
-                    player.setMaxRegularStreak(player.getCurrentRegularStreak());
-                    //לשלוח הודעה לכול מי שצריך אולי לנתיב הראשי על רצף חם של מעל 5
+                if (player.getTrackState().equals(PlayerTrackState.REGULAR)) {
+                    player.addRegularSuccess();
+                    player.addRegularStreak(1);
+                    player.addRegularSuccessTimeMs(timeSpent);
+                    if (player.getCurrentRegularStreak() > player.getMaxRegularStreak()) {
+                        player.setMaxRegularStreak(player.getCurrentRegularStreak());
+                        //לשלוח הודעה לכול מי שצריך אולי לנתיב הראשי על רצף חם של מעל 5
+                    }
                 }
             } else {
                 addScore = -(int) (player.getCurrentQuestion().getScore() * 0.2);
                 if (player.getCurrentScore() + addScore < 0)
                     addScore = 0;
-                player.setCurrentRegularStreak(0);
+                if (player.getTrackState().equals(PlayerTrackState.REGULAR)) {
+                    player.setCurrentRegularStreak(0);
+                }
             }
+
             player.addScore(addScore);
 
             AnswerScoreDTO answerScoreDTO = new AnswerScoreDTO(addScore, player.getId());
@@ -194,11 +292,8 @@ public class RaceEngineService {
             if (player.getCurrentScore() >= race.getSettings().getTargetScore()) {
                 finishRace(race);
             } else {
-                scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
-                        Date.from(Instant.now().plusMillis(200)));
-
+                processNextStep(race, player);
             }
-
         }
     }
 
@@ -210,9 +305,13 @@ public class RaceEngineService {
                 return;
             }
 
-            player.addRegularAttempt();
-            player.addRegularTimeMs(player.getQuestionTimeSpent());
-            player.setCurrentRegularStreak(0);
+            if (!player.getTrackState().equals(PlayerTrackState.REGULAR)) {
+                player.subSpecialQuestionsRemaining();
+            }else {
+                player.addRegularAttempt();
+                player.addRegularTimeMs(player.getQuestionTimeSpent());
+                player.setCurrentRegularStreak(0);
+            }
 
             playerQuestionTimers.remove(player.getId());
             player.setCurrentQuestion(null);
@@ -224,28 +323,37 @@ public class RaceEngineService {
             webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_TIMEOUT", answerScoreDTO,
                     race.getHost().getId(), race.getHost().getSessionActive());
 
-            scheduler.schedule(() -> sendNextQuestionToPlayer(race, player),
-                    Date.from(Instant.now().plusMillis(200)));
+            processNextStep(race, player);
         }
     }
 
-    private void resumeCurrentQuestionForPlayer(RaceManager race, RacePlayer player) {
+    private void resumePlayerState(RaceManager race, RacePlayer player) {
         if (!race.isAccountIn(player.getId()) || !race.getStatus().isRunning()) return;
 
-        if (player.getCurrentQuestion() == null) {
-            sendNextQuestionToPlayer(race, player);
-            return;
+        synchronized (player) {
+            long remainingTime = player.getQuestionRemainingTimeMs();
+            player.setQuestionStartTimeAtMs(System.currentTimeMillis());
+
+            if (player.getTrackState() == PlayerTrackState.WAITING_FOR_CHOICE) {
+                ScheduledFuture<?> timeoutTask = scheduler.schedule(
+                        () -> handleJunctionTimeout(race, player),
+                        Date.from(Instant.now().plusMillis(remainingTime))
+                );
+                playerQuestionTimers.put(player.getId(), timeoutTask);
+                return;
+            }
+
+            if (player.getCurrentQuestion() == null) {
+                processNextStep(race, player);
+                return;
+            }
+
+            MathQuestion currentQuestion = player.getCurrentQuestion();
+            Instant timeoutTime = Instant.now().plusMillis(remainingTime);
+            ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> handleQuestionTimeout(race, player, currentQuestion), Date.from(timeoutTime));
+
+            playerQuestionTimers.put(player.getId(), timeoutTask);
         }
-
-        long remainingTime = player.getQuestionRemainingTimeMs();
-        player.setQuestionStartTimeAtMs(System.currentTimeMillis());
-
-
-        MathQuestion currentQuestion = player.getCurrentQuestion();
-        Instant timeoutTime = Instant.now().plusMillis(remainingTime);
-        ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> handleQuestionTimeout(race, player,currentQuestion), Date.from(timeoutTime));
-
-        playerQuestionTimers.put(player.getId(), timeoutTask);
     }
 
     public void pauseRace(RaceManager race) {
@@ -299,7 +407,7 @@ public class RaceEngineService {
                 race.getHost().getId(), race.getHost().getSessionActive());
 
         for (RacePlayer player : race.getPlayers().values()) {
-            resumeCurrentQuestionForPlayer(race, player);
+            resumePlayerState(race, player);
         }
     }
 
