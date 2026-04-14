@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -111,8 +112,10 @@ public class WebSocketService {
     }
 
     public void removeSession(String userId, String sessionId, ErrorCode errorCode) {
+        if (!StringUtils.hasText(sessionId) || !StringUtils.hasText(sessionId)) return;
+
         Set<String> sessions = userSessions.get(userId);
-        if (sessions != null) {
+        if (sessions != null && sessions.contains(sessionId)) {
             sessions.remove(sessionId);
             if (sessions.isEmpty()) {
                 userSessions.remove(userId);

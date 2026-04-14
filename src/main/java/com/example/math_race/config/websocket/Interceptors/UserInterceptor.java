@@ -97,27 +97,27 @@ public class UserInterceptor implements ChannelInterceptor {
 
         accessor.getSessionAttributes().put("sub_path_" + subId, destination);
 
-        if(destination.contains("/race")) {
+        if (destination.contains("/race")) {
             RaceManager race = raceService.findOpenRaceByAccountId(principal.getName());
             if (race == null) {
-                webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.USER_NOT_IN_ANY_RACE,accessor);
+                webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.USER_NOT_IN_ANY_RACE, accessor);
                 return null;
             }
 
             if (destination.contains("/topic/race/")) {
                 Map<String, String> vars = matcher.extractUriTemplateVariables("/topic/race/{roomCode}/updates", destination);
                 if (!race.isRoomCode(vars.get("roomCode"))) {
-                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_REGISTERED_FOR_RACE,accessor);
+                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_REGISTERED_FOR_RACE, accessor);
                     return null;
                 }
             } else if (destination.startsWith("/user/queue/race/feedback")) {
                 if (race.isHost(principal.getName())) {
-                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.HOST_FORBIDDEN_PLAYER_ACTION,accessor);
+                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.HOST_FORBIDDEN_PLAYER_ACTION, accessor);
                     return null;
                 }
             } else if (destination.startsWith("/user/queue/race/host")) {
                 if (!race.isHost(principal.getName())) {
-                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_RACE_HOST,accessor);
+                    webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.NOT_RACE_HOST, accessor);
                     return null;
                 }
             }
@@ -126,10 +126,12 @@ public class UserInterceptor implements ChannelInterceptor {
             String incomingToken = accessor.getFirstNativeHeader("Join-Token");
 
             if (!account.isConnected() || account.getSessionActive().equals(accessor.getSessionId()) ||
-                    account.containsJoinToken() && account.getJoinToken().equals(incomingToken)) {
+                    (account.containsJoinToken() && account.getJoinToken().equals(incomingToken))) {
+
+                boolean isNewConnection = !account.isConnected() || !accessor.getSessionId().equals(account.getSessionActive());
 
                 if (account.isConnected() && !account.getSessionActive().equals(accessor.getSessionId())) {
-                    webSocketService.removeSession(account.getId(),account.getSessionActive(),ErrorCode.DUPLICATE_RACE_CONNECTION);
+                    webSocketService.removeSession(account.getId(), account.getSessionActive(), ErrorCode.DUPLICATE_RACE_CONNECTION);
                 }
 
                 if (incomingToken != null && incomingToken.equals(account.getJoinToken())) {
@@ -139,23 +141,24 @@ public class UserInterceptor implements ChannelInterceptor {
                 account.setSessionActive(accessor.getSessionId());
                 boolean hostConnected = race.isHost(principal.getName());
 
-                webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
-                        hostConnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
-                        new AccountConnectionDTO(account));
+                if (isNewConnection) {
+                    webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                            hostConnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
+                            new AccountConnectionDTO(account));
 
-                if (!hostConnected) {
-                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+                    if (!hostConnected) {
+                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+                                new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+                    }
                 }
 
-
             } else {
-                webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.DUPLICATE_RACE_CONNECTION,accessor);
+                webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.DUPLICATE_RACE_CONNECTION, accessor);
                 return null;
             }
 
-        }else if (!destination.equals("/user/queue/notifications")) {
-            webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.INVALID_RACE_PATH,accessor);
+        } else if (!destination.equals("/user/queue/notifications")) {
+            webSocketService.sendErrorToQueueSession(QUEUE_NOTIFICATIONS, ErrorCode.INVALID_RACE_PATH, accessor);
             return null;
         }
 

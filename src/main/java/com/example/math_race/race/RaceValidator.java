@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RaceValidator {
     public static final int MAX_SCORES = 1500;
-    public static final int MIN_SCORES = 400;
+    public static final int MIN_SCORES = 50;
     public static final int MIN_NAME_LENGTH = 3;
 
     public void validate(RaceSettings settings) {
