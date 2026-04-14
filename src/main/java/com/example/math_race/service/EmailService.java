@@ -34,7 +34,7 @@ public class EmailService {
         Context context = new Context();
 
         context.setVariable("name", to.getUsername());
-        context.setVariable("verificationUrl", "http://localhost:5174/verify/" + token.getToken());
+        context.setVariable("verificationUrl", "http://localhost:5174/auth/verify/" + token.getToken());
 
         String htmlContent = templateEngine.process("verify-email", context);
 
@@ -53,7 +53,7 @@ public class EmailService {
         Context context = new Context();
 
         context.setVariable("name", to.getUsername());
-        context.setVariable("resetUrl", "http://localhost:5174/reset-password/" + token.getToken());
+        context.setVariable("resetUrl", "http://localhost:5174/auth/reset-password/" + token.getToken());
 
         String htmlContent = templateEngine.process("reset-password", context);
 
@@ -72,7 +72,7 @@ public class EmailService {
         Context context = new Context();
 
         context.setVariable("name", to.getUsername());
-        context.setVariable("loginUrl", "http://localhost:5174/login");
+        context.setVariable("loginUrl", "http://localhost:5174/auth/login");
 
         String htmlContent = templateEngine.process("password-changed", context);
 
