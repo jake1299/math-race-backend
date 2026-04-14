@@ -24,3 +24,8 @@ Content-Type: application/json
   "email": "1@gmail.com",
   "password" :  "eoivnekdfj "
 }
+
+###
+
+GET http://localhost:8085/api/users/me/history
+Authorization: Bearer 2470af46-6c4c-4db2-a6d7-32d28180f1ee
