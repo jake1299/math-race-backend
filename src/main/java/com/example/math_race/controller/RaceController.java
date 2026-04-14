@@ -5,6 +5,7 @@ import com.example.math_race.dto.response.ApiResponse;
 import com.example.math_race.dto.response.CreateRaceResponse;
 import com.example.math_race.dto.response.JoinRaceResponse;
 import com.example.math_race.dto.response.RaceInfoResponse;
+import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.service.RaceService;
@@ -34,6 +35,11 @@ public class RaceController {
         raceService.handleSubmitQuestion(roomCode,request, accessor);
     }
 
+    @MessageMapping("/race/{roomCode}/player/junction/choose")
+    public void handleJunctionChoose(@DestinationVariable String roomCode, @Valid @Payload JunctionChooseRequest request , StompHeaderAccessor accessor) {
+        raceService.handleJunctionChoose(roomCode, request, accessor);
+    }
+
     @MessageMapping("/race/{roomCode}/host/start")
     public void handleChangeRaceStatus(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
         raceService.handleStartRace(roomCode, accessor);
@@ -47,10 +53,7 @@ public class RaceController {
     // http://localhost:8085/api/race/create
     @PostMapping("/create")
     public ApiResponse<CreateRaceResponse> createRace(@Valid @RequestBody CreateRaceRequest request, RequestMetadata metadata) {
-
         CreateRaceResponse createRaceResponse = raceService.creatRace(request, metadata);
-        System.out.println(createRaceResponse);
-
         return ApiResponse.success(createRaceResponse);
     }
 

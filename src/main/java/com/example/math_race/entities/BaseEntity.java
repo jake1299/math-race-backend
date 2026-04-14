@@ -2,11 +2,15 @@ package com.example.math_race.entities;
 
 import lombok.Data;
 
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
 @Data
+@MappedSuperclass
 public abstract class BaseEntity {
     private UUID id;
     private Date creationDate;
@@ -15,7 +19,6 @@ public abstract class BaseEntity {
     private Date deletionDate;
 
     public BaseEntity() {
-        creationDate = new Date();
         deleted = false;
     }
 
@@ -29,5 +32,16 @@ public abstract class BaseEntity {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.creationDate = new Date();
+        this.updatedDate = this.creationDate;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedDate = new Date();
     }
 }

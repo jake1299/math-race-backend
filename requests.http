@@ -1,0 +1,26 @@
+GET http://localhost:8085/api/users/me/statistics
+Authorization: Bearer fd8e192a-d3fb-40e5-b312-2849890bff63
+
+###
+
+### יצירת מירוץ חדש
+POST http://localhost:8085/api/race/create
+Content-Type: application/json
+Authorization: Bearer fd8e192a-d3fb-40e5-b312-2849890bff63
+
+{
+  "name": "חדש כרגע",
+  "targetScore": 500,
+  "nickname": "ShimonTheKing"
+}
+
+###
+
+POST http://localhost:8085/api/auth/register
+Content-Type: application/json
+
+{
+  "username" : "ere",
+  "email": "1@gmail.com",
+  "password" :  "eoivnekdfj "
+}

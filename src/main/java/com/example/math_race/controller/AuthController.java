@@ -2,7 +2,7 @@ package com.example.math_race.controller;
 
 import com.example.math_race.dto.request.*;
 import com.example.math_race.dto.response.ApiResponse;
-import com.example.math_race.dto.response.CreateGuestIdResponse;
+import com.example.math_race.dto.response.CreateGuestTokenResponse;
 import com.example.math_race.dto.response.LoginResponse;
 import com.example.math_race.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +63,9 @@ public class AuthController {
         return ApiResponse.success(null);
     }
 
-    @PostMapping("/create-guestId")
-    public ApiResponse<CreateGuestIdResponse> createGuestId(RequestMetadata metadata) {
-        CreateGuestIdResponse createGuestIdResponse = authService.createGuestId();
+    @PostMapping("/create-guestToken")
+    public ApiResponse<CreateGuestTokenResponse> createGuestId(RequestMetadata metadata) {
+        CreateGuestTokenResponse createGuestIdResponse = authService.createGuestToken();
         return ApiResponse.success(createGuestIdResponse);
     }
 }

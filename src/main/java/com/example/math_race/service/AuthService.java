@@ -1,7 +1,7 @@
 package com.example.math_race.service;
 
 import com.example.math_race.dto.request.*;
-import com.example.math_race.dto.response.CreateGuestIdResponse;
+import com.example.math_race.dto.response.CreateGuestTokenResponse;
 import com.example.math_race.dto.response.LoginResponse;
 import com.example.math_race.entities.TokenEntity;
 import com.example.math_race.entities.UserEntity;
@@ -9,6 +9,8 @@ import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.exception.LogicException;
 import com.example.math_race.repositories.AuthRepository;
 import com.example.math_race.repositories.TokenRepository;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -17,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.math_race.entities.TokenEntity.TokenType.*;
 
@@ -28,6 +31,11 @@ public class AuthService {
     private final TokenService tokenService;
     private final EmailService emailService;
     private final TokenRepository tokenRepository;
+
+    private final Cache<String, String> guestSessions = Caffeine.newBuilder()
+            .expireAfterAccess(24, TimeUnit.HOURS)
+            .maximumSize(10000)
+            .build();
 
     @Autowired
     public AuthService(EmailService emailService, AuthRepository userRepository, TokenService tokenService, TokenRepository tokenRepository) {
@@ -221,13 +229,16 @@ public class AuthService {
         return user;
     }
 
-    public CreateGuestIdResponse createGuestId(){
-        String newGuestId = "Guest-" + UUID.randomUUID().toString().substring(0,10);
+    public CreateGuestTokenResponse createGuestToken() {
+        String guestId = "Guest-" +UUID.randomUUID().toString().substring(6);
+        String sessionToken = UUID.randomUUID().toString();
 
-        return new CreateGuestIdResponse(newGuestId,30);
+        guestSessions.put(sessionToken, guestId);
+        return new CreateGuestTokenResponse(sessionToken,30);
     }
 
-    public boolean isValidGuestId(String guestId) {
-        return guestId.startsWith("Guest-") && guestId.length() == 16;
+    public String getGuestIdByToken(String token) {
+        if (token == null) return null;
+        return guestSessions.getIfPresent(token);
     }
 }

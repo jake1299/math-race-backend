@@ -23,6 +23,7 @@ public class RaceStateDTO {
     private List<PlayerProgressDTO> players;
     private HostDetailsDTO host;
     private long totalDurationMillis;
+    private long remainingTimeMs;
 
     public RaceStateDTO(RaceManager race, RaceAccount toAccount){
         this.name = race.getSettings().getRaceName();
@@ -32,6 +33,7 @@ public class RaceStateDTO {
         this.status = race.getStatus();
         this.players = new ArrayList<>();
         this.totalDurationMillis = race.getSettings().getTotalDurationTimeMs();
+        this.remainingTimeMs = race.getCalculatedRemainingTime();
 
         boolean toHostAccount = race.isHost(toAccount.getId());
 

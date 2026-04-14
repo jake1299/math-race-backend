@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class MathQuestionDTO {
 
+    private String playerId;
     private String expression;
     private List<String> options;
     private long timeLimitMillis;
@@ -21,6 +22,7 @@ public class MathQuestionDTO {
     private int score;
 
     public MathQuestionDTO(RaceManager race, RacePlayer player, MathQuestion mathQuestion) {
+        this.playerId = player.getId();
         this.expression = mathQuestion.getExpression();
         this.options = mathQuestion.getOptions();
         this.timeLimitMillis = mathQuestion.getTimeLimitMillis();

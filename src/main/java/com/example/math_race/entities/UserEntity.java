@@ -1,9 +1,11 @@
 package com.example.math_race.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class UserEntity extends BaseEntity {
 

@@ -23,10 +23,9 @@ public class RequestMetadataResolver implements HandlerMethodArgumentResolver {
         RequestMetadata metadata = new RequestMetadata();
 
         metadata.setUserAgent(webRequest.getHeader("User-Agent"));
-
-        metadata.setGuestId(webRequest.getHeader("GuestID"));
-
+        metadata.setGuestToken(webRequest.getHeader("GuestToken"));
         String authHeader = webRequest.getHeader("Authorization");
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             metadata.setAuthorization(authHeader.substring(7));
         } else {

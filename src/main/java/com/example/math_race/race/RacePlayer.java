@@ -16,6 +16,9 @@ public class RacePlayer extends RaceAccount{
     private long questionStartTimeAtMs;
     private int currentScore;
 
+    private PlayerTrackState trackState;
+    private int specialQuestionsRemaining;
+
     private int regularQAttempts;
     private int regularQSuccesses;
     private long regularQTimeMs;
@@ -26,6 +29,7 @@ public class RacePlayer extends RaceAccount{
     private int junctionsOfferedCount;
     private int autostradaChoices;
     private int dirtRoadChoices;
+    private int lastJunctionRegularQCount;
 
     public RacePlayer(String accountId, String sessionActive, String joinToken ,String nickname){
         this(accountId,null,sessionActive,joinToken,nickname);
@@ -47,6 +51,10 @@ public class RacePlayer extends RaceAccount{
         this.junctionsOfferedCount = 0;
         this.autostradaChoices = 0;
         this.dirtRoadChoices = 0;
+        this.lastJunctionRegularQCount = 0;
+
+        this.trackState = PlayerTrackState.REGULAR;
+        this.specialQuestionsRemaining = 0;
     }
 
     public boolean checkAnswer(String answer){
@@ -99,6 +107,14 @@ public class RacePlayer extends RaceAccount{
 
     public void addDirtRoadChoices() {
         this.dirtRoadChoices += 1;
+    }
+
+    public void subSpecialQuestionsRemaining() {
+        this.specialQuestionsRemaining -= 1;
+    }
+
+    public void snapshotJunctionState() {
+        this.lastJunctionRegularQCount = this.regularQAttempts;
     }
 
     public long getQuestionTimeSpent() {

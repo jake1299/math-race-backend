@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateGuestIdResponse {
-    private String guestId;
+public class CreateGuestTokenResponse {
+    private String guestToken;
     private int dayToSave;
 }

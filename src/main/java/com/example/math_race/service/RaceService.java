@@ -1,5 +1,6 @@
 package com.example.math_race.service;
 
+import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.dto.wsMessage.response.PlayerJoinedDTO;
 import com.example.math_race.dto.wsMessage.response.RaceStateDTO;
@@ -29,8 +30,8 @@ public class RaceService {
     private final AuthService authService;
     private final WebSocketService webSocketService;
     private final RaceEngineService raceEngineService;
-    private final Map<String, RaceManager> allRaces;
-    private final Map<String, String> accountIdToOpenRoomCode;
+    private final Map<String, RaceManager> allRaces =  new ConcurrentHashMap<>();
+    private final Map<String, String> accountIdToOpenRoomCode = new ConcurrentHashMap<>();
 
     @Autowired
     public RaceService(RaceValidator raceValidator, AuthService authService, WebSocketService webSocketService, RaceEngineService raceEngineService) {
@@ -38,8 +39,6 @@ public class RaceService {
         this.authService = authService;
         this.webSocketService = webSocketService;
         this.raceEngineService = raceEngineService;
-        this.allRaces = new ConcurrentHashMap<>();
-        this.accountIdToOpenRoomCode = new ConcurrentHashMap<>();
     }
 
     public CreateRaceResponse creatRace(CreateRaceRequest request, RequestMetadata metadata){
@@ -93,10 +92,7 @@ public class RaceService {
         String accountId;
 
         if (user == null) {
-            if (!StringUtils.hasText(metadata.getGuestId())) {
-                throw new LogicException(ErrorCode.INVALID_TOKEN);
-            }
-            accountId = metadata.getGuestId();
+            accountId = getGuestIdByToken(metadata);
         }else {
             accountId = user.getId().toString();
         }
@@ -120,13 +116,8 @@ public class RaceService {
         UserEntity user = authService.getActiveUserByToken(metadata);
 
         if (user == null) {
-            if (StringUtils.hasText(metadata.getGuestId()) && authService.isValidGuestId(metadata.getGuestId())) {
-                accountId = metadata.getGuestId();
-                nickname = StringUtils.hasText(request.getNickname()) ?
-                        request.getNickname() : createNickname();
-            }else {
-                throw new LogicException(ErrorCode.INVALID_TOKEN);
-            }
+            accountId = getGuestIdByToken(metadata);
+            nickname = StringUtils.hasText(request.getNickname()) ? request.getNickname() : createNickname();
         } else {
             accountId =  user.getId().toString();
             nickname = StringUtils.hasText(request.getNickname()) ?
@@ -169,6 +160,12 @@ public class RaceService {
                 raceManager.getRoomCode(),isHost ? "HOST" : "PLAYER",raceManager.getSettings().getTargetScore());
     }
 
+    public void handleJunctionChoose(String roomCode, JunctionChooseRequest request, StompHeaderAccessor accessor){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (race.getStatus().isRunning()){
+            raceEngineService.handleJunctionChoice(race,race.getPlayer(accessor.getUser().getName()),request.getChoice());
+        }
+    }
 
     public void handleSubmitQuestion(String roomCode, SubmitQuestionRequest request, StompHeaderAccessor accessor){
         RaceManager race = findOpenRaceByRoomCode(roomCode);
@@ -197,6 +194,14 @@ public class RaceService {
 
         webSocketService.sendSuccessToQueueSession(isHost ? QUEUE_RACE_HOST : QUEUE_RACE_FEEDBACK, "RACE_FULL_STATE",
                 new RaceStateDTO(raceManager, raceManager.getAccount(accessor.getUser().getName())),accessor);
+    }
+
+    public void removeRace(RaceManager raceManager){
+        allRaces.remove(raceManager.getRoomCode());
+        accountIdToOpenRoomCode.remove(raceManager.getHost().getId());
+        for (RacePlayer player : raceManager.getPlayers().values()){
+            accountIdToOpenRoomCode.remove(player.getId());
+        }
     }
 
     public void sendPlayerJoined(RaceManager race, String accountId){
@@ -293,6 +298,20 @@ public class RaceService {
 
     public RaceManager findRaceByRoomCode(String roomCode) {
         return allRaces.get(roomCode);
+    }
+
+    public String getGuestIdByToken(RequestMetadata metadata) {
+        String guestToken = metadata.getGuestToken();
+        if (!StringUtils.hasText(guestToken)) {
+            throw new LogicException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String guestId = authService.getGuestIdByToken(guestToken);
+        if (guestId == null) {
+            throw new LogicException(ErrorCode.INVALID_TOKEN);
+        }
+
+        return guestId;
     }
 
     public String createNickname(){

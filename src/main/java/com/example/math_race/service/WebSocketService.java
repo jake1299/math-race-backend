@@ -1,10 +1,12 @@
 package com.example.math_race.service;
 
+import com.example.math_race.config.websocket.WebSocketSessionRegistry;
 import com.example.math_race.dto.wsMessage.WsMessage;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.exception.LogicException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
@@ -28,12 +30,14 @@ public class WebSocketService {
 
     @Getter
     private final Map<String, Set<String>> userSessions;
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SimpMessagingTemplate messagingTemplate;
 
 
     @Autowired
-    public WebSocketService(SimpMessagingTemplate messagingTemplate) {
+    public WebSocketService(SimpMessagingTemplate messagingTemplate, @Lazy WebSocketSessionRegistry webSocketSessionRegistry) {
         this.messagingTemplate = messagingTemplate;
+        this.webSocketSessionRegistry = webSocketSessionRegistry;
         this.userSessions = new ConcurrentHashMap<>();
 
     }
@@ -106,15 +110,22 @@ public class WebSocketService {
                 .add(sessionId);
     }
 
-    public void removeSession(String userId, String sessionId) {
-        // כדאי לשלוח הודעה למשתמש
+    public void removeSession(String userId, String sessionId, ErrorCode errorCode) {
         Set<String> sessions = userSessions.get(userId);
         if (sessions != null) {
             sessions.remove(sessionId);
             if (sessions.isEmpty()) {
                 userSessions.remove(userId);
             }
+            if (errorCode == null)
+                webSocketSessionRegistry.forceDisconnect(sessionId);
+            else
+                webSocketSessionRegistry.forceDisconnect(sessionId, errorCode);
         }
+    }
+
+    public void removeSession(String userId, String sessionId) {
+       removeSession(userId,sessionId,null);
     }
 
     public String getRaceUpdatesTopic(String roomCode) {

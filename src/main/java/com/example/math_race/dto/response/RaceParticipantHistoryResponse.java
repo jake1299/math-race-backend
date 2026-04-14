@@ -12,7 +12,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RaceParticipantHistoryResponse {
-    private boolean isGhost;
+    private boolean isGuest;
     private String userName;
 
     private String nickname;
@@ -24,7 +24,7 @@ public class RaceParticipantHistoryResponse {
     private boolean isSpeedDemon;
 
     public RaceParticipantHistoryResponse(RaceHistoryEntity raceHistoryEntity, RaceParticipantHistoryEntity player) {
-        this.isGhost = player.isGuest();
+        this.isGuest = player.isGuest();
         if (!player.isGuest()) {
             userName = player.getUser().getUsername();
         }
@@ -32,7 +32,7 @@ public class RaceParticipantHistoryResponse {
         this.finalScore = player.getFinalScore();
         this.rank = player.getRank();
 
-        String playerId = isGhost ? player.getGuestId() : player.getUser().getId().toString();
+        String playerId = isGuest ? player.getGuestId() : player.getUser().getId().toString();
 
         this.isStreakMaster = Objects.equals(raceHistoryEntity.getStreakMasterId(), playerId);
         this.isAccuracyKing = Objects.equals(raceHistoryEntity.getAccuracyKingId(), playerId);
