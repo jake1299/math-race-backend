@@ -6,6 +6,8 @@ import com.example.math_race.dto.response.CreateRaceResponse;
 import com.example.math_race.dto.response.JoinRaceResponse;
 import com.example.math_race.dto.response.RaceInfoResponse;
 import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
+import com.example.math_race.dto.wsMessage.request.KickPlayerRequest;
+import com.example.math_race.dto.wsMessage.request.MessageToPlayerRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.service.RaceService;
@@ -43,6 +45,31 @@ public class RaceController {
     @MessageMapping("/race/{roomCode}/host/start")
     public void handleChangeRaceStatus(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
         raceService.handleStartRace(roomCode, accessor);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/kick")
+    public void handleKickPlayer(@DestinationVariable String roomCode, @Valid @Payload KickPlayerRequest request , StompHeaderAccessor accessor) {
+        raceService.kickPlayerFromRace(roomCode,request);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/message-to-player")
+    public void handleSendMessageToPlayer(@DestinationVariable String roomCode, @Valid @Payload MessageToPlayerRequest request , StompHeaderAccessor accessor) {
+        raceService.sendMessageToPlayer(roomCode,request);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/pause")
+    public void handlePauseRace(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
+        raceService.pauseRace(roomCode);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/resume")
+    public void handleResumeRace(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
+        raceService.resumeRace(roomCode);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/cancel")
+    public void handleCancelRace(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
+        raceService.cancelRace(roomCode);
     }
 
     @MessageMapping({"/race/{roomCode}/host/sync", "/race/{roomCode}/player/sync"})

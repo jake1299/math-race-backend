@@ -58,9 +58,9 @@ public class RaceEngineService {
 
         raceEndTimers.put(race.getId().toString(), endTask);
 
-        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_START", statusChangedDTO,
-                race.getHost().getId(), race.getHost().getSessionActive());
+        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(race);
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_START", statusChangedDTO,
+//                race.getHost().getId(), race.getHost().getSessionActive());
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                 "RACE_START", statusChangedDTO);
 
@@ -146,6 +146,8 @@ public class RaceEngineService {
         synchronized (player) {
             if (player.getTrackState() != PlayerTrackState.WAITING_FOR_CHOICE) return;
             player.addJunctionsOfferedCount();
+            player.snapshotJunctionState();
+
 
             ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
             if (timer != null) timer.cancel(false);
@@ -180,7 +182,9 @@ public class RaceEngineService {
             if (player.getTrackState() != PlayerTrackState.WAITING_FOR_CHOICE) {
                 return;
             }
+
             player.addJunctionsOfferedCount();
+            player.snapshotJunctionState();
 
             playerQuestionTimers.remove(player.getId());
 
@@ -350,6 +354,7 @@ public class RaceEngineService {
 
             MathQuestion currentQuestion = player.getCurrentQuestion();
             Instant timeoutTime = Instant.now().plusMillis(remainingTime);
+
             ScheduledFuture<?> timeoutTask = scheduler.schedule(() -> handleQuestionTimeout(race, player, currentQuestion), Date.from(timeoutTime));
 
             playerQuestionTimers.put(player.getId(), timeoutTask);
@@ -381,11 +386,11 @@ public class RaceEngineService {
             endTask.cancel(false);
         }
 
-        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(RaceStatus.PAUSED);
+        StatusChangedDTO statusChangedDTO = new StatusChangedDTO(race);
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_PAUSED", statusChangedDTO);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_PAUSED", statusChangedDTO,
-                race.getHost().getId(), race.getHost().getSessionActive());
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_PAUSED", statusChangedDTO,
+//                race.getHost().getId(), race.getHost().getSessionActive());
     }
 
     public void resumeRace(RaceManager race) {
@@ -400,11 +405,11 @@ public class RaceEngineService {
         ScheduledFuture<?> endTask = scheduler.schedule(() -> finishRace(race), Date.from(endTime));
         raceEndTimers.put(race.getId().toString(), endTask);
 
-        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.IN_PROGRESS);
+        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(race);
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()), "RACE_RESUMED", statusChangedDTO);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_RESUMED", statusChangedDTO,
-                race.getHost().getId(), race.getHost().getSessionActive());
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "RACE_RESUMED", statusChangedDTO,
+//                race.getHost().getId(), race.getHost().getSessionActive());
 
         for (RacePlayer player : race.getPlayers().values()) {
             resumePlayerState(race, player);
@@ -425,8 +430,8 @@ public class RaceEngineService {
         RaceResultsDTO resultsDTO = new RaceResultsDTO(race);
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),"RACE_COMPLETED",resultsDTO);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_COMPLETED",resultsDTO,
-                race.getHost().getId(),race.getHost().getSessionActive());
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_COMPLETED",resultsDTO,
+//                race.getHost().getId(),race.getHost().getSessionActive());
 
         endRace(race);
     }
@@ -446,11 +451,11 @@ public class RaceEngineService {
             endTask.cancel(false);
         }
 
-        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(RaceStatus.CANCELLED);
+        StatusChangedDTO  statusChangedDTO = new StatusChangedDTO(race);
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),"RACE_CANCELLED",statusChangedDTO);
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",statusChangedDTO,
-                race.getHost().getId(),race.getHost().getSessionActive());
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"RACE_CANCELLED",statusChangedDTO,
+//                race.getHost().getId(),race.getHost().getSessionActive());
 
         endRace(race);
     }
@@ -469,7 +474,7 @@ public class RaceEngineService {
         webSocketService.removeSession(race.getHost().getId(),race.getHost().getSessionActive(),ErrorCode.RACE_ALREADY_FINISHED);
     }
 
-    private void saveRace(RaceManager race) {
+    public void saveRace(RaceManager race) {
         raceRepository.saveRaceToHistory(race);
     }
 
@@ -479,6 +484,13 @@ public class RaceEngineService {
             if (timer != null) {
                 timer.cancel(false);
             }
+        }
+    }
+
+    public void removeTimerForPlayer(RacePlayer player) {
+        ScheduledFuture<?> timer = playerQuestionTimers.remove(player.getId());
+        if (timer != null) {
+            timer.cancel(false);
         }
     }
 }

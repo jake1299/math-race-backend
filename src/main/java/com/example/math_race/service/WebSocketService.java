@@ -71,7 +71,6 @@ public class WebSocketService {
         sendToQueueSession(path, WsMessage.success(type,data),userId,sessionId);
     }
 
-
     public void sendToQueueSession(String path, WsMessage<?> wsMessage, String userId, String sessionId) {
         if (sessionId == null) {
             return;

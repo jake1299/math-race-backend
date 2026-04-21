@@ -1,0 +1,14 @@
+package com.example.math_race.dto.wsMessage.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class MessageDTO {
+    private String from;
+    private String to;
+    private String message;
+}

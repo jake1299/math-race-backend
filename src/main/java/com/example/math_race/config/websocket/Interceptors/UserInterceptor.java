@@ -146,10 +146,10 @@ public class UserInterceptor implements ChannelInterceptor {
                             hostConnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                             new AccountConnectionDTO(account));
 
-                    if (!hostConnected) {
-                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-                                new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-                    }
+//                    if (!hostConnected) {
+//                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+//                                new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+//                    }
                 }
 
             } else {
@@ -252,10 +252,10 @@ public class UserInterceptor implements ChannelInterceptor {
                         hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                         new AccountConnectionDTO(account));
 
-                if (!hostDisconnected) {
-                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-                }
+//                if (!hostDisconnected) {
+//                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+//                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+//                }
             }
         }
     }
@@ -282,10 +282,10 @@ public class UserInterceptor implements ChannelInterceptor {
                         hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                         new AccountConnectionDTO(account));
 
-                if (!hostDisconnected) {
-                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-                }
+//                if (!hostDisconnected) {
+//                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
+//                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
+//                }
             }
         }
     }

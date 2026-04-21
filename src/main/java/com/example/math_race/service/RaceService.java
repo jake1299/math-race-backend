@@ -1,7 +1,10 @@
 package com.example.math_race.service;
 
 import com.example.math_race.dto.wsMessage.request.JunctionChooseRequest;
+import com.example.math_race.dto.wsMessage.request.KickPlayerRequest;
+import com.example.math_race.dto.wsMessage.request.MessageToPlayerRequest;
 import com.example.math_race.dto.wsMessage.request.SubmitQuestionRequest;
+import com.example.math_race.dto.wsMessage.response.MessageDTO;
 import com.example.math_race.dto.wsMessage.response.PlayerJoinedDTO;
 import com.example.math_race.dto.wsMessage.response.RaceStateDTO;
 import com.example.math_race.dto.request.*;
@@ -23,7 +26,6 @@ import java.util.stream.Collectors;
 import static com.example.math_race.service.WebSocketService.*;
 
 @Service
-@Transactional(readOnly = true)
 public class RaceService {
 
     private final RaceValidator raceValidator;
@@ -67,7 +69,7 @@ public class RaceService {
         allRaces.put(raceManager.getRoomCode(), raceManager);
 
 
-        fullRace(false,raceManager);
+        fullRace(true,raceManager);
 
         return new CreateRaceResponse(
                 raceSettings.getRaceName(),
@@ -205,12 +207,64 @@ public class RaceService {
     }
 
     public void sendPlayerJoined(RaceManager race, String accountId){
-        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,
-               "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),true),
-                race.getHost().getId(),race.getHost().getSessionActive());
+//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,
+//               "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),true),
+//                race.getHost().getId(),race.getHost().getSessionActive());
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                 "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),false));
+    }
+
+    public void kickPlayerFromRace(String roomCode, KickPlayerRequest kickPlayer){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (!race.getStatus().isClosed()){
+            RacePlayer player = race.getPlayers().remove(kickPlayer.getPlayerId());
+            if (player != null){
+                raceEngineService.removeTimerForPlayer(player);
+                webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                        "PLAYER_KICKED",new PlayerRemoveDTO(player));
+
+                webSocketService.removeSession(player.getId(),player.getSessionActive());
+                // לצרף קוד שגיאה בבעיטה
+            }
+        }
+    }
+
+    public void sendMessageToPlayer(String roomCode, MessageToPlayerRequest sendMessage){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        RacePlayer player = race.getPlayer(sendMessage.getPlayerId());
+        if (player != null){
+            MessageDTO message =  new MessageDTO("HOST",player.getId(),sendMessage.getMessage());
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK,"HOST_MESSAGE",
+                    message,
+                    player.getId(), player.getSessionActive());
+
+            webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "NEW_HOST_MESSAGE",
+                    message,
+                    race.getHost().getId(), race.getHost().getSessionActive());
+        }
+
+    }
+
+    public void pauseRace(String roomCode){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (race.getStatus().isRunning()){
+            raceEngineService.pauseRace(race);
+        }
+    }
+
+    public void resumeRace(String roomCode){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (race.getStatus().equals(RaceStatus.PAUSED)){
+            raceEngineService.resumeRace(race);
+        }
+    }
+
+    public void cancelRace(String roomCode){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (!race.getStatus().isClosed()){
+            raceEngineService.cancelledRace(race);
+        }
     }
 
     public RaceAccount findAccountByIdInOpenRace(String accountId) {

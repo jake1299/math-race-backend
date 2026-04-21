@@ -5,16 +5,31 @@ import com.example.math_race.race.questions.MathQuestion;
 import lombok.*;
 
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class RacePlayer extends RaceAccount{
+    private static final String[] CAR_COLORS = {
+            "#3b82f6", // כחול
+            "#22c55e", // ירוק
+            "#ef4444", // אדום
+            "#f59e0b", // כתום
+            "#a855f7", // סגול
+            "#ec4899", // ורוד
+            "#06b6d4", // תכלת
+            "#eab308", // צהוב
+            "#14b8a6", // טורקיז
+            "#6366f1"  // אינדיגו
+    };
+
     private MathQuestion currentQuestion;
     private long questionRemainingTimeMs;
     private long questionStartTimeAtMs;
     private int currentScore;
+    private String carColor;
 
     private PlayerTrackState trackState;
     private int specialQuestionsRemaining;
@@ -41,6 +56,7 @@ public class RacePlayer extends RaceAccount{
 
     public RacePlayer(String accountId, UserEntity user, String sessionActive, String joinToken ,String nickname){
         super(accountId,user,sessionActive,joinToken,nickname);
+        this.carColor = assignRandomColor();
         this.currentScore = 0;
         this.regularQAttempts = 0;
         this.regularQSuccesses = 0;
@@ -121,6 +137,11 @@ public class RacePlayer extends RaceAccount{
         long timeElapsed = System.currentTimeMillis() - this.questionStartTimeAtMs;
 
         return Math.min(timeElapsed, currentQuestion.getTimeLimitMillis());
+    }
+
+    public static String assignRandomColor() {
+        int randomIndex = ThreadLocalRandom.current().nextInt(CAR_COLORS.length);
+        return CAR_COLORS[randomIndex];
     }
 
     @Override

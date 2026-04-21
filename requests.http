@@ -1,5 +1,5 @@
-GET http://localhost:8085/api/users/me/statistics
-Authorization: Bearer fd8e192a-d3fb-40e5-b312-2849890bff63
+GET http://localhost:8085/api/users/me/history
+Authorization: Bearer 9b08583a-4374-46e3-9017-19c18b347d3b
 
 ###
 

@@ -110,7 +110,7 @@ public class QuestionEngine {
 
         MathQuestion mathQuestion = new MathQuestion();
         mathQuestion.setId(questionTemplate.id());
-        mathQuestion.setExpression(questionText);
+        mathQuestion.setExpression(questionText + " תשובה נכונה  : " + correctAnswer);
         mathQuestion.setCorrectAnswer(correctAnswer);
         mathQuestion.setOptions(options);
         mathQuestion.setHint(evaluateTemplate(questionTemplate.hintTemplate(), memory));

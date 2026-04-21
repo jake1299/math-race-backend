@@ -11,10 +11,12 @@ import lombok.NoArgsConstructor;
 public class HostDetailsDTO {
     private String id;
     private String nickname;
+    private String userName;
     private boolean isOnline;
 
     public HostDetailsDTO(RaceHost raceHost){
         this.id = raceHost.getId();
+        this.userName = raceHost.getUser().getUsername();
         this.nickname = raceHost.getNickname();
         this.isOnline = raceHost.isConnected();
     }

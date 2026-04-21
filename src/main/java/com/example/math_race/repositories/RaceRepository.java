@@ -22,7 +22,6 @@ public class RaceRepository extends BaseRepository{
 
     public void saveRaceToHistory(RaceManager race) {
         RaceHistoryEntity raceHistoryEntity = new RaceHistoryEntity(race);
-        System.out.println(raceHistoryEntity.getId());
         save(raceHistoryEntity);
 
         List<RacePlayer> rankedPlayers = race.getRankedPlayers();
@@ -35,5 +34,8 @@ public class RaceRepository extends BaseRepository{
             save(raceParticipantHistory);
             currentRank++;
         }
+
+        getCurrentSession().flush();
+        System.out.println("הכל נשמר ? " + raceHistoryEntity.getId());
     }
 }

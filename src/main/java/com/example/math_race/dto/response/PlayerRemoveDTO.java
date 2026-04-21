@@ -1,4 +1,4 @@
-package com.example.math_race.dto.wsMessage.response;
+package com.example.math_race.dto.response;
 
 import com.example.math_race.race.RacePlayer;
 import lombok.AllArgsConstructor;
@@ -8,12 +8,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChangeTrackDTO {
-    private String state;
+public class PlayerRemoveDTO {
     private String playerId;
 
-    public ChangeTrackDTO(RacePlayer player) {
-        this.state = player.getTrackState().name();
+    public  PlayerRemoveDTO(RacePlayer player){
         this.playerId = player.getId();
     }
 }
