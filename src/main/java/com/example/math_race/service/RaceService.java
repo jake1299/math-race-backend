@@ -212,7 +212,7 @@ public class RaceService {
 //                race.getHost().getId(),race.getHost().getSessionActive());
 
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
-                "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),false));
+                "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId)));
     }
 
     public void kickPlayerFromRace(String roomCode, KickPlayerRequest kickPlayer){
@@ -224,7 +224,7 @@ public class RaceService {
                 webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                         "PLAYER_KICKED",new PlayerRemoveDTO(player));
 
-                webSocketService.removeSession(player.getId(),player.getSessionActive());
+                webSocketService.removeSession(player.getId(),player.getSessionActive(),ErrorCode.PLAYER_KICKED);
                 // לצרף קוד שגיאה בבעיטה
             }
         }

@@ -49,6 +49,7 @@ public enum ErrorCode {
     NOT_ENOUGH_PLAYERS_TO_START(1418, "At least 2 players are required to start the race!"),
     RACE_HISTORY_ACCESS_DENIED(1419, "You are not authorized to view the history of this race!"),
     RACE_HISTORY_NOT_FOUND(1420, "The requested race history does not exist or has been deleted."),
+    PLAYER_KICKED(1420,"The race host has removed you from the race."),
 
     // Connection & Session Errors (1500 Series)
     INTENTIONAL_DISCONNECT(1500, "The connection was closed intentionally."),

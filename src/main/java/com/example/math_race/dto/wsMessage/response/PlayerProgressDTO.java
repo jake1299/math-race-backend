@@ -23,15 +23,15 @@ public class PlayerProgressDTO {
     private PlayerTrackState trackState;
     private boolean isOnline;
 
-    public PlayerProgressDTO(RaceManager race, RacePlayer player, boolean showScore){
+    public PlayerProgressDTO(RaceManager race, RacePlayer player,boolean forHostOrIsAccount, boolean showScore){
         this.id = player.getId();
         this.carColor = player.getCarColor();
         this.userName = player.isGuest() ? null : player.getUser().getUsername();
         this.nickname = player.getNickname();
-        this.currentScore = showScore ? player.getCurrentScore() : null;
+        this.currentScore = forHostOrIsAccount || showScore ? player.getCurrentScore() : null;
         this.isOnline = player.isConnected();
-        this.trackState =  showScore ? player.getTrackState() : null;
-        this.currentQuestion = showScore && !race.getStatus().isClosed() && player.getCurrentQuestion() != null ? new MathQuestionDTO(race,player,player.getCurrentQuestion()) : null;
-        this.currentJunction = showScore ? player.getTrackState().equals(WAITING_FOR_CHOICE) ? new JunctionOfferDTO(race,player) : null : null;
+        this.trackState =  forHostOrIsAccount ? player.getTrackState() : null;
+        this.currentQuestion = forHostOrIsAccount && !race.getStatus().isClosed() && player.getCurrentQuestion() != null ? new MathQuestionDTO(race,player,player.getCurrentQuestion()) : null;
+        this.currentJunction = forHostOrIsAccount ? player.getTrackState().equals(WAITING_FOR_CHOICE) ? new JunctionOfferDTO(race,player) : null : null;
     }
 }

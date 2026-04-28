@@ -25,7 +25,7 @@ public class RaceResultsDTO {
         this.statistics = new RaceStatisticsDTO(new RaceStatistics(race));
 
         for (RacePlayer player : race.getPlayers().values()){
-            this.players.add(new PlayerProgressDTO(race,player,true));
+            this.players.add(new PlayerProgressDTO(race,player,true,true));
         }
 
     }
