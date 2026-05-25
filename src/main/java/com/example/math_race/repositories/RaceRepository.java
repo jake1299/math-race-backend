@@ -34,8 +34,5 @@ public class RaceRepository extends BaseRepository{
             save(raceParticipantHistory);
             currentRank++;
         }
-
-        getCurrentSession().flush();
-        System.out.println("הכל נשמר ? " + raceHistoryEntity.getId());
     }
 }

@@ -28,7 +28,7 @@ public class RaceEngineService {
     private final WebSocketService webSocketService;
     private final MathQuestionGenerator mathQuestionGenerator;
     private final RaceRepository raceRepository;
-    private final JunctionEngine junctionEngine;
+    private final RandomEventEngine randomEventEngine;
     private final RaceService raceService;
 
     private final Map<String, ScheduledFuture<?>> raceEndTimers = new ConcurrentHashMap<>();
@@ -37,13 +37,13 @@ public class RaceEngineService {
     @Autowired
     public RaceEngineService(
             @Qualifier(GAME_SCHEDULER_BEAN_NAME) ThreadPoolTaskScheduler scheduler, WebSocketService webSocketService,
-            MathQuestionGenerator mathQuestionGenerator,  RaceRepository raceRepository, JunctionEngine junctionEngine, @Lazy RaceService raceService) {
+            MathQuestionGenerator mathQuestionGenerator, RaceRepository raceRepository, RandomEventEngine randomEventEngine, @Lazy RaceService raceService) {
 
         this.scheduler = scheduler;
         this.webSocketService = webSocketService;
         this.mathQuestionGenerator = mathQuestionGenerator;
         this.raceRepository = raceRepository;
-        this.junctionEngine = junctionEngine;
+        this.randomEventEngine = randomEventEngine;
         this.raceService = raceService;
     }
 
@@ -102,7 +102,7 @@ public class RaceEngineService {
             }
 
             if (player.getTrackState() == PlayerTrackState.REGULAR) {
-                boolean shouldOfferJunction = junctionEngine.shouldTriggerJunction(player, race);
+                boolean shouldOfferJunction = randomEventEngine.shouldTriggerJunction(player, race);
 
                 if (shouldOfferJunction) {
                     scheduler.schedule(() -> sendJunctionOfferToPlayer(race, player),
@@ -222,6 +222,8 @@ public class RaceEngineService {
             player.setCurrentQuestion(question);
             player.setQuestionStartTimeAtMs(System.currentTimeMillis());
             player.setQuestionRemainingTimeMs(question.getTimeLimitMillis());
+            player.setGotHint(false);
+            player.setCanAskHint(randomEventEngine.shouldGiveHint(player,race));
 
             MathQuestionDTO questionDTO = new MathQuestionDTO(race, player, question);
             webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK, "NEW_QUESTION", questionDTO,

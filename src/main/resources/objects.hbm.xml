@@ -71,6 +71,7 @@
         <property name="name" type="string" column="race_name" not-null="true"/>
         <property name="roomCode" type="string" column="room_code" not-null="true"/>
         <property name="targetScore" type="int" column="target_score" not-null="true"/>
+        <property name="private" type="java.lang.Boolean" column="private_room" not-null="true"/>
 
         <property name="createdAtMs" type="long" column="created_at_millis" not-null="true"/>
         <property name="endedAtMs" type="long" column="ended_at_millis" not-null="true"/>
@@ -131,6 +132,7 @@
         <property name="nickname" type="string" column="nick_name" not-null="true"/>
         <property name="finalScore" type="int" column="final_score" not-null="true"/>
         <property name="rank" type="int" column="player_rank" not-null="true"/>
+        <property name="hintsReceived" type="int" column="hints_received" not-null="true"/>
 
         <property name="regularQAttempts" type="int" column="regular_q_attempts" not-null="true"/>
         <property name="regularQSuccesses" type="int" column="regular_q_successes" not-null="true"/>

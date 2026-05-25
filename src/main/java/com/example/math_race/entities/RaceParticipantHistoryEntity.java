@@ -17,6 +17,7 @@ public class RaceParticipantHistoryEntity extends BaseEntity {
     private String nickname;
     private int finalScore;
     private int rank;
+    private int hintsReceived;
 
     private int regularQAttempts;
     private int regularQSuccesses;
@@ -36,6 +37,7 @@ public class RaceParticipantHistoryEntity extends BaseEntity {
         this.nickname = player.getNickname();
         this.finalScore = player.getCurrentScore();
         this.rank = rank;
+        this.hintsReceived = player.getNumHintsReceived();
 
         this.regularQAttempts = player.getRegularQAttempts();
         this.regularQSuccesses = player.getRegularQSuccesses();

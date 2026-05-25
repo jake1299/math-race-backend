@@ -26,6 +26,10 @@ public class RacePlayer extends RaceAccount{
     };
 
     private MathQuestion currentQuestion;
+    private boolean canAskHint;
+    private boolean gotHint;
+    private int numHintsReceived;
+
     private long questionRemainingTimeMs;
     private long questionStartTimeAtMs;
     private int currentScore;
@@ -68,6 +72,7 @@ public class RacePlayer extends RaceAccount{
         this.autostradaChoices = 0;
         this.dirtRoadChoices = 0;
         this.lastJunctionRegularQCount = 0;
+        this.numHintsReceived = 0;
 
         this.trackState = PlayerTrackState.REGULAR;
         this.specialQuestionsRemaining = 0;
@@ -131,6 +136,10 @@ public class RacePlayer extends RaceAccount{
 
     public void snapshotJunctionState() {
         this.lastJunctionRegularQCount = this.regularQAttempts;
+    }
+
+    public void addHintsReceived(){
+        this.numHintsReceived += 1;
     }
 
     public long getQuestionTimeSpent() {

@@ -43,8 +43,10 @@ public class GlobalExceptionHandler {
                 .body(body);
     }
 
-    @MessageExceptionHandler(MethodArgumentNotValidException.class)
-    public void handleWebSocketValidationExceptions(MethodArgumentNotValidException ex, StompHeaderAccessor accessor) {
+    @MessageExceptionHandler(org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException.class)
+    public void handleWebSocketValidationExceptions(
+            org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException ex,
+            StompHeaderAccessor accessor) {
 
         String cleanMessage = ex.getBindingResult()
                 .getAllErrors()
@@ -55,6 +57,16 @@ public class GlobalExceptionHandler {
                 WebSocketService.QUEUE_RACE_FEEDBACK,
                 ErrorCode.INVALID_INPUT,
                 cleanMessage,
+                accessor
+        );
+    }
+
+    @MessageExceptionHandler(Exception.class)
+    public void handleAllOtherWebSocketExceptions(Exception ex, StompHeaderAccessor accessor) {
+        ex.printStackTrace();
+        webSocketService.sendErrorToQueueSession(
+                WebSocketService.QUEUE_NOTIFICATIONS,
+                ErrorCode.INTERNAL_ERROR,
                 accessor
         );
     }

@@ -32,12 +32,15 @@ public class CreateRaceRequest {
     private String name;
 
     @NotNull(message = "Target score is required")
-    @Min(value = 400, message = "Target score must be at least 400")
-    @Max(value = 1500, message = "Target score cannot exceed 1500")
+    @Min(value = 20, message = "Target score must be at least 400")
+    @Max(value = 100000, message = "Target score cannot exceed 1500")
     private Integer targetScore;
 
     // כנ"ל - אופציונלי, אבל אם סופק חייב להיות תקין
     @Size(max = 20, message = "nickname cannot exceed 20 characters")
     @Pattern(regexp = "^(?:.*\\S){3}.*$", message = "nickname must contain at least 3 actual characters")
     private String nickname;
+
+    @NotNull(message = "isPrivate flag is required")
+    private boolean isPrivate;
 }

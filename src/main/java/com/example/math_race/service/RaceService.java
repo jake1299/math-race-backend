@@ -1,11 +1,7 @@
 package com.example.math_race.service;
 
-import com.example.math_race.config.websocket.Interceptors.UserPrincipal;
 import com.example.math_race.dto.wsMessage.request.*;
-import com.example.math_race.dto.wsMessage.response.AccountConnectionDTO;
-import com.example.math_race.dto.wsMessage.response.MessageDTO;
-import com.example.math_race.dto.wsMessage.response.PlayerJoinedDTO;
-import com.example.math_race.dto.wsMessage.response.RaceStateDTO;
+import com.example.math_race.dto.wsMessage.response.*;
 import com.example.math_race.dto.request.*;
 import com.example.math_race.dto.response.*;
 import com.example.math_race.entities.UserEntity;
@@ -13,12 +9,10 @@ import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.exception.LogicException;
 import com.example.math_race.race.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.validation.Valid;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -55,7 +49,7 @@ public class RaceService {
                 request.getNickname() : user.getUsername();
 
 
-        RaceSettings raceSettings = new RaceSettings(request.getName(), request.getTargetScore());
+        RaceSettings raceSettings = new RaceSettings(request.getName(), request.getTargetScore(),request.isPrivate());
         raceValidator.validate(raceSettings);
 
         String joinToken = UUID.randomUUID().toString().substring(0, 10);
@@ -90,28 +84,16 @@ public class RaceService {
 
     }
 
-    public RaceInfoResponse raceInfo(String roomCode, RequestMetadata metadata){
-        UserEntity user = authService.getActiveUserByToken(metadata);
-        String accountId;
+    public List<PublicRaceInfoResponse> getActivePublicRaces(PublicRacesListRequest request) {
+        long skipCount = (long) request.getPage() * request.getSize();
 
-        if (user == null) {
-            accountId = getGuestIdByToken(metadata);
-        }else {
-            accountId = user.getId().toString();
-        }
-
-        RaceManager raceManager =  findOpenRaceByRoomCode(roomCode);
-
-        if (raceManager == null)
-            throw new LogicException(ErrorCode.RACE_NOT_FOUND);
-
-        RaceAccount account = raceManager.getAccount(accountId);
-
-        if (account == null) {
-            throw new LogicException(ErrorCode.NOT_REGISTERED_FOR_RACE);
-        }
-
-        return new RaceInfoResponse(account,raceManager);
+        return allRaces.values().stream()
+                .filter(race -> !race.getSettings().isPrivate() && race.getStatus().equals(RaceStatus.PENDING))
+                .sorted(Comparator.comparingLong(RaceManager::getCreatedAtMs).reversed())
+                .skip(skipCount)
+                .limit(request.getSize())
+                .map(PublicRaceInfoResponse::new)
+                .collect(Collectors.toList());
     }
 
     public JoinRaceResponse joinRace(String roomCode, JoinRaceRequest request, RequestMetadata metadata){
@@ -208,10 +190,6 @@ public class RaceService {
     }
 
     public void sendPlayerJoined(RaceManager race, String accountId){
-//        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,
-//               "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId),true),
-//                race.getHost().getId(),race.getHost().getSessionActive());
-
         webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                 "PLAYER_JOINED",new PlayerJoinedDTO(race,race.getPlayer(accountId)));
     }
@@ -256,7 +234,42 @@ public class RaceService {
                 account.setNickname(request.getNickname());
                 webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                         "CHANGE_NICKNAME",  new AccountConnectionDTO(account));
+            }
+        }
+    }
 
+    public void changeRaceName(String roomCode, ChangeRaceNameRequest request) {
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        if (!race.getStatus().isClosed()) {
+            race.getSettings().setRaceName(request.getRaceName());
+
+            webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
+                    "CHANGE_RACE_NAME", new ChangeRaceNameDTO(race));
+        }
+    }
+
+
+    public void playerAskForHint(String roomCode, StompHeaderAccessor accessor){
+        RaceManager race = findOpenRaceByRoomCode(roomCode);
+        RacePlayer player = race.getPlayer(accessor.getUser().getName());
+
+        if (player != null && race.getStatus().isRunning()){
+            if (player.isCanAskHint() || player.isGotHint()){
+                HintReceivedDTO hintReceivedDTO = new HintReceivedDTO(player);
+
+                webSocketService.sendSuccessToQueueSession(QUEUE_RACE_FEEDBACK,"QUESTION_HINT",
+                        hintReceivedDTO,
+                        player.getId(), player.getSessionActive());
+
+                webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST,"QUESTION_HINT",
+                        hintReceivedDTO,
+                        race.getHost().getId(), race.getHost().getSessionActive());
+
+                player.setCanAskHint(false);
+                if (!player.isGotHint()) {
+                    player.setGotHint(true);
+                    player.addHintsReceived();
+                }
             }
         }
     }

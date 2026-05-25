@@ -11,18 +11,20 @@ public class RaceSettings {
 
     private String raceName;
     private int targetScore;
+    private boolean isPrivate;
 
     private final long totalDurationTimeMs;
 
     public RaceSettings() {
-       this("",RaceValidator.MIN_SCORES);
+       this("",RaceValidator.MIN_SCORES,true);
        setDefaultName();
     }
 
-    public RaceSettings(String raceName, int targetScore) {
+    public RaceSettings(String raceName, int targetScore, boolean isPrivate) {
         this.raceName = raceName;
         this.targetScore = targetScore;
         this.totalDurationTimeMs = (long) targetScore * 600;
+        this.isPrivate = isPrivate;
     }
 
     public void setDefaultName() {

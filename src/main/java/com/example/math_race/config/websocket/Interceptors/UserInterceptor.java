@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.security.Principal;
@@ -53,14 +52,27 @@ public class UserInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor == null || accessor.getCommand() == null) return message;
 
-        StompCommand command = accessor.getCommand();
+        try {
+            StompCommand command = accessor.getCommand();
 
-        if (StompCommand.CONNECT.equals(command)) {
-            handleConnect(accessor);
-        } else if (StompCommand.SUBSCRIBE.equals(command)) {
-            return handleSubscribe(message,accessor);
-        }else if (StompCommand.SEND.equals(accessor.getCommand())){
-            return handleSend(message,accessor);
+            if (StompCommand.CONNECT.equals(command)) {
+                handleConnect(accessor);
+            } else if (StompCommand.SUBSCRIBE.equals(command)) {
+                return handleSubscribe(message, accessor);
+            } else if (StompCommand.SEND.equals(command)) {
+                return handleSend(message, accessor);
+            }
+
+        } catch (MessageDeliveryException ex) {
+            throw ex;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            webSocketService.sendErrorToQueueSession(
+                    QUEUE_NOTIFICATIONS,
+                    ErrorCode.INTERNAL_ERROR, accessor);
+
+            return null;
         }
 
         return message;
@@ -146,11 +158,6 @@ public class UserInterceptor implements ChannelInterceptor {
                     webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                             hostConnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                             new AccountConnectionDTO(account));
-
-//                    if (!hostConnected) {
-//                        webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-//                                new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-//                    }
                 }
 
             } else {
@@ -252,11 +259,6 @@ public class UserInterceptor implements ChannelInterceptor {
                 webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                         hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                         new AccountConnectionDTO(account));
-
-//                if (!hostDisconnected) {
-//                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-//                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-//                }
             }
         }
     }
@@ -282,11 +284,6 @@ public class UserInterceptor implements ChannelInterceptor {
                 webSocketService.sendSuccessToTopic(webSocketService.getRaceUpdatesTopic(race.getRoomCode()),
                         hostDisconnected ? "HOST_CONNECTION" : "PLAYER_CONNECTION",
                         new AccountConnectionDTO(account));
-
-//                if (!hostDisconnected) {
-//                    webSocketService.sendSuccessToQueueSession(QUEUE_RACE_HOST, "PLAYER_CONNECTION",
-//                            new AccountConnectionDTO(account), race.getHost().getId(), race.getHost().getSessionActive());
-//                }
             }
         }
     }

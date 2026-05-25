@@ -4,7 +4,7 @@ import com.example.math_race.dto.request.*;
 import com.example.math_race.dto.response.ApiResponse;
 import com.example.math_race.dto.response.CreateRaceResponse;
 import com.example.math_race.dto.response.JoinRaceResponse;
-import com.example.math_race.dto.response.RaceInfoResponse;
+import com.example.math_race.dto.response.PublicRaceInfoResponse;
 import com.example.math_race.dto.wsMessage.request.*;
 import com.example.math_race.exception.ErrorCode;
 import com.example.math_race.service.RaceService;
@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/race")
@@ -54,9 +55,19 @@ public class RaceController {
         raceService.playerLeftFromRace(roomCode,accessor);
     }
 
+    @MessageMapping("/race/{roomCode}/player/hint")
+    public void handlePlayerAskForHint(@DestinationVariable String roomCode, StompHeaderAccessor accessor) {
+        raceService.playerAskForHint(roomCode,accessor);
+    }
+
     @MessageMapping({"/race/{roomCode}/player/change-nickname", "/race/{roomCode}/host/change-nickname"})
     public void handleChangeNickname(@DestinationVariable String roomCode, @Valid @Payload ChangeNicknameRequest request, StompHeaderAccessor accessor) {
         raceService.changeNickname(roomCode,request,accessor);
+    }
+
+    @MessageMapping("/race/{roomCode}/host/change-race-name")
+    public void handleChangeRaceName(@DestinationVariable String roomCode, @Valid @Payload ChangeRaceNameRequest request, StompHeaderAccessor accessor) {
+        raceService.changeRaceName(roomCode,request);
     }
 
     @MessageMapping("/race/{roomCode}/host/message-to-player")
@@ -91,6 +102,12 @@ public class RaceController {
         return ApiResponse.success(createRaceResponse);
     }
 
+    @GetMapping("/public-list")
+    public ApiResponse<List<PublicRaceInfoResponse>> getActivePublicRaces(@Valid @ModelAttribute PublicRacesListRequest request, RequestMetadata metadata){
+        List<PublicRaceInfoResponse> publicRaceInfoResponse = raceService.getActivePublicRaces(request);
+        return ApiResponse.success(publicRaceInfoResponse);
+    }
+
    @PostMapping("/{roomCode}/join")
     public ApiResponse<JoinRaceResponse> joinRace(@PathVariable String roomCode, @Valid @RequestBody JoinRaceRequest request, RequestMetadata metadata){
        if (!StringUtils.hasText(roomCode)) {
@@ -99,15 +116,5 @@ public class RaceController {
 
         JoinRaceResponse joinRaceResponse = raceService.joinRace(roomCode,request,metadata);
         return ApiResponse.success(joinRaceResponse);
-    }
-
-    @GetMapping("/{roomCode}/info")
-    public ApiResponse<RaceInfoResponse> getRaceInfo(@PathVariable String roomCode, RequestMetadata metadata){
-        if (!StringUtils.hasText(roomCode)) {
-            return ApiResponse.error(ErrorCode.INVALID_INPUT);
-        }
-
-        RaceInfoResponse raceInfoResponse = raceService.raceInfo(roomCode,metadata);
-        return ApiResponse.success(raceInfoResponse);
     }
 }

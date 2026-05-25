@@ -19,6 +19,7 @@ public class RaceHistoryEntity extends BaseEntity {
     private String hostNickname;
     private int targetScore;
     private RaceStatus status;
+    private boolean isPrivate;
     private long createdAtMs;
     private long endedAtMs;
     private long totalDurationMillis;
@@ -50,6 +51,7 @@ public class RaceHistoryEntity extends BaseEntity {
         this.targetScore = race.getSettings().getTargetScore();
         this.status = race.getStatus();
         this.createdAtMs = race.getCreatedAtMs();
+        this.isPrivate = race.getSettings().isPrivate();
         this.endedAtMs = race.getEndedAtMs();
         this.totalDurationMillis = race.getSettings().getTotalDurationTimeMs();
         this.totalPausedDurationMillis = race.getTotalPausedDurationTimeMs();
