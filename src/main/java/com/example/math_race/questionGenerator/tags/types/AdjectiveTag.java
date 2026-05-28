@@ -12,6 +12,7 @@ import java.util.Map;
 import static com.example.math_race.questionGenerator.tags.enums.Gender.MALE;
 import static com.example.math_race.questionGenerator.tags.enums.Plurality.SINGULAR;
 import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexExpression;
+import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexStringExpression;
 
 
 public class AdjectiveTag implements MatchableTag {
@@ -92,13 +93,13 @@ public class AdjectiveTag implements MatchableTag {
         }
 
         if (reqId != null) {
-            boolean isNegated = reqId.startsWith("!");
-            String val = isNegated ? reqId.substring(1).trim() : reqId;
-            if (isNegated == this.id.equalsIgnoreCase(val)) return false;
+            if (!matchComplexStringExpression(reqId.toUpperCase(), java.util.Collections.singleton(this.id.toUpperCase()))) {
+                return false;
+            }
         }
 
         if (reqType != null) {
-            return matchComplexExpression(reqType, java.util.Collections.singleton(this.type), AdjectiveType.class);
+            return matchComplexExpression(reqType, java.util.Collections.singleton(this.type));
         }
 
         return true;

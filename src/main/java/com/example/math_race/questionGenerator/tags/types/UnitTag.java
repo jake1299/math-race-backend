@@ -93,13 +93,13 @@ public class UnitTag implements MatchableTag {
         }
 
         if (reqType != null) {
-            if (!matchComplexExpression(reqType, java.util.Collections.singleton(this.type), UnitType.class)) {
+            if (!matchComplexExpression(reqType, java.util.Collections.singleton(this.type))) {
                 return false;
             }
         }
 
         if (reqItemCategory != null) {
-            return matchComplexExpression(reqItemCategory, this.validItemCategories, ItemCategory.class);
+            return matchComplexExpression(reqItemCategory, this.validItemCategories);
         }
 
         return true;

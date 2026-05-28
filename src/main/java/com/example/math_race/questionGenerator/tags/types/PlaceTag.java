@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.*;
 
 import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexExpression;
+import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexStringExpression;
 
 @Data
 @AllArgsConstructor
@@ -95,19 +96,19 @@ public class PlaceTag implements MatchableTag {
         }
 
         if (reqId != null) {
-            boolean isNegated = reqId.startsWith("!");
-            String val = isNegated ? reqId.substring(1).trim() : reqId;
-            if (isNegated == this.id.equalsIgnoreCase(val)) return false;
+            if (!matchComplexStringExpression(reqId.toUpperCase(), java.util.Collections.singleton(this.id.toUpperCase()))) {
+                return false;
+            }
         }
 
         if (reqPlaceType != null) {
-            if (!matchComplexExpression(reqPlaceType, java.util.Collections.singleton(this.placeType), PlaceType.class)) {
+            if (!matchComplexExpression(reqPlaceType, java.util.Collections.singleton(this.placeType))) {
                 return false;
             }
         }
 
         if (reqType != null) {
-            return matchComplexExpression(reqType, this.availableItemCategories, ItemCategory.class);
+            return matchComplexExpression(reqType, this.availableItemCategories);
         }
 
         return true;

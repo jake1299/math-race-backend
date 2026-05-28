@@ -424,7 +424,7 @@ public class MathQuestionGenerator {
         String num = constraints.getOrDefault("num", "s").toLowerCase();
 
         if (f.equals("inf")) {
-            return key -> chosenVerb.getWord("inf", MALE, "ANY");
+            //return key -> chosenVerb.getWord("inf", MALE, "ANY");
         }
 
         String exactWord = "";//chosenVerb.getWord(t, g, num);
@@ -604,417 +604,417 @@ public class MathQuestionGenerator {
 
     public static ArrayList<VerbTag> fillVerbs() {
         ArrayList<VerbTag> verbs = new ArrayList<>();
-        // --- קנה ---
-        VerbTag buy = new VerbTag("buy");
-        buy.addForm("past", MALE, "s", "קנה");
-        buy.addForm("past", FEMALE, "s", "קנתה");
-        buy.addForm("past", MALE, "p", "קנו");
-        buy.addForm("past", FEMALE, "p", "קנו");
-        buy.addForm("inf", MALE, "ANY", "לקנות");
-        verbs.add(buy);
-
-        // --- אכל (לאוכל, מאפים וממתקים) ---
-        VerbTag eat = new VerbTag("eat");
-        eat.addForm("past", MALE, "s", "אכל");
-        eat.addForm("past", FEMALE, "s", "אכלה");
-        eat.addForm("past", MALE, "p", "אכלו");
-        eat.addForm("past", FEMALE, "p", "אכלו");
-        eat.addForm("inf", MALE, "ANY", "לאכול");
-        verbs.add(eat);
-
-        // --- שתה (חדש - למשקאות!) ---
-        VerbTag drink = new VerbTag("drink");
-        drink.addForm("past", MALE, "s", "שתה");
-        drink.addForm("past", FEMALE, "s", "שתתה");
-        drink.addForm("past", MALE, "p", "שתו");
-        drink.addForm("past", FEMALE, "p", "שתו");
-        drink.addForm("inf", MALE, "ANY", "לשתות");
-        verbs.add(drink);
-
-        // --- לבש (חדש - לביגוד!) ---
-        VerbTag wear = new VerbTag("wear");
-        wear.addForm("past", MALE, "s", "לבש");
-        wear.addForm("past", FEMALE, "s", "לבשה");
-        wear.addForm("past", MALE, "p", "לבשו");
-        wear.addForm("past", FEMALE, "p", "לבשו");
-        wear.addForm("inf", MALE, "ANY", "ללבוש");
-        verbs.add(wear);
-
-        // --- תיקן (חדש - לטמבורייה ואלקטרוניקה!) ---
-        VerbTag fix = new VerbTag("fix");
-        fix.addForm("past", MALE, "s", "תיקן");
-        fix.addForm("past", FEMALE, "s", "תיקנה");
-        fix.addForm("past", MALE, "p", "תיקנו");
-        fix.addForm("past", FEMALE, "p", "תיקנו");
-        fix.addForm("inf", MALE, "ANY", "לתקן");
-        verbs.add(fix);
-
-        // --- נתן ---
-        VerbTag give = new VerbTag("give");
-        give.addForm("past", MALE, "s", "נתן");
-        give.addForm("past", FEMALE, "s", "נתנה");
-        give.addForm("past", MALE, "p", "נתנו");
-        give.addForm("past", FEMALE, "p", "נתנו");
-        give.addForm("inf", MALE, "ANY", "לתת");
-        verbs.add(give);
-
-        // --- קיבל ---
-        VerbTag receive = new VerbTag("receive");
-        receive.addForm("past", MALE, "s", "קיבל");
-        receive.addForm("past", FEMALE, "s", "קיבלה");
-        receive.addForm("past", MALE, "p", "קיבלו");
-        receive.addForm("past", FEMALE, "p", "קיבלו");
-        receive.addForm("inf", MALE, "ANY", "לקבל");
-        verbs.add(receive);
-
-        // --- מצא ---
-        VerbTag find = new VerbTag("find");
-        find.addForm("past", MALE, "s", "מצא");
-        find.addForm("past", FEMALE, "s", "מצאה");
-        find.addForm("past", MALE, "p", "מצאו");
-        find.addForm("past", FEMALE, "p", "מצאו");
-        find.addForm("inf", MALE, "ANY", "למצוא");
-        verbs.add(find);
-
-        // --- איבד ---
-        VerbTag lose = new VerbTag("lose");
-        lose.addForm("past", MALE, "s", "איבד");
-        lose.addForm("past", FEMALE, "s", "איבדה");
-        lose.addForm("past", MALE, "p", "איבדו");
-        lose.addForm("past", FEMALE, "p", "איבדו");
-        lose.addForm("inf", MALE, "ANY", "לאבד");
-        verbs.add(lose);
-
-        // --- אסף ---
-        VerbTag collect = new VerbTag("collect");
-        collect.addForm("past", MALE, "s", "אסף");
-        collect.addForm("past", FEMALE, "s", "אספה");
-        collect.addForm("past", MALE, "p", "אספו");
-        collect.addForm("past", FEMALE, "p", "אספו");
-        collect.addForm("inf", MALE, "ANY", "לאסוף");
-        verbs.add(collect);
-
-        // --- חילק ---
-        VerbTag divide = new VerbTag("divide");
-        divide.addForm("past", MALE, "s", "חילק");
-        divide.addForm("past", FEMALE, "s", "חילקה");
-        divide.addForm("past", MALE, "p", "חילקו");
-        divide.addForm("past", FEMALE, "p", "חילקו");
-        divide.addForm("inf", MALE, "ANY", "לחלק");
-        verbs.add(divide);
-
-        // --- נכנס ---
-        VerbTag enter = new VerbTag("enter");
-        enter.addForm("past", MALE, "s", "נכנס");
-        enter.addForm("past", FEMALE, "s", "נכנסה");
-        enter.addForm("past", MALE, "p", "נכנסו");
-        enter.addForm("past", FEMALE, "p", "נכנסו");
-        enter.addForm("inf", MALE, "ANY", "להיכנס");
-        verbs.add(enter);
-
-        // --- מכר ---
-        VerbTag sell = new VerbTag("sell");
-        sell.addForm("past", MALE, "s", "מכר");
-        sell.addForm("past", FEMALE, "s", "מכרה");
-        sell.addForm("past", MALE, "p", "מכרו");
-        sell.addForm("past", FEMALE, "p", "מכרו");
-        sell.addForm("inf", MALE, "ANY", "למכור");
-        verbs.add(sell);
-
-        // --- לקח ---
-        VerbTag take = new VerbTag("take");
-        take.addForm("past", MALE, "s", "לקח");
-        take.addForm("past", FEMALE, "s", "לקחה");
-        take.addForm("past", MALE, "p", "לקחו");
-        take.addForm("past", FEMALE, "p", "לקחו");
-        take.addForm("inf", MALE, "ANY", "לקחת");
-        verbs.add(take);
-
-        // --- שם / הניח ---
-        VerbTag put = new VerbTag("put");
-        put.addForm("past", MALE, "s", "שם");
-        put.addForm("past", FEMALE, "s", "שמה");
-        put.addForm("past", MALE, "p", "שמו");
-        put.addForm("past", FEMALE, "p", "שמו");
-        put.addForm("inf", MALE, "ANY", "לשים");
-        verbs.add(put);
-
-        // --- סידר ---
-        VerbTag arrange = new VerbTag("arrange");
-        arrange.addForm("past", MALE, "s", "סידר");
-        arrange.addForm("past", FEMALE, "s", "סידרה");
-        arrange.addForm("past", MALE, "p", "סידרו");
-        arrange.addForm("past", FEMALE, "p", "סידרו");
-        arrange.addForm("inf", MALE, "ANY", "לסדר");
-
-        arrange.addForm("present", MALE, "s", "מסדר");
-        arrange.addForm("present", FEMALE, "s", "מסדרת");
-        arrange.addForm("present", MALE, "p", "מסדרים");
-        arrange.addForm("present", FEMALE, "p", "מסדרות");
-        verbs.add(arrange);
-
-        // --- שילם ---
-        VerbTag pay = new VerbTag("pay");
-        pay.addForm("past", MALE, "s", "שילם");
-        pay.addForm("past", FEMALE, "s", "שילמה");
-        pay.addForm("past", MALE, "p", "שילמו");
-        pay.addForm("past", FEMALE, "p", "שילמו");
-        pay.addForm("inf", MALE, "ANY", "לשלם");
-
-        pay.addForm("future", MALE, "s", "ישלם");
-        pay.addForm("future", FEMALE, "s", "תשלם");
-        pay.addForm("future", MALE, "p", "ישלמו");
-        pay.addForm("future", FEMALE, "p", "ישלמו");
-
-        verbs.add(pay);
-
-        // --- חסך ---
-        VerbTag save = new VerbTag("save");
-        save.addForm("past", MALE, "s", "חסך");
-        save.addForm("past", FEMALE, "s", "חסכה");
-        save.addForm("past", MALE, "p", "חסכו");
-        save.addForm("past", FEMALE, "p", "חסכו");
-        save.addForm("inf", MALE, "ANY", "לחסוך");
-        save.addForm("present", MALE, "s", "חוסך");
-        save.addForm("present", FEMALE, "s", "חוסכת");
-        save.addForm("present", MALE, "p", "חוסכים");
-        save.addForm("present", FEMALE, "p", "חוסכות");
-        verbs.add(save);
-
-        // --- סיים ---
-        VerbTag finish = new VerbTag("finish");
-        finish.addForm("past", MALE, "s", "סיים");
-        finish.addForm("past", FEMALE, "s", "סיימה");
-        finish.addForm("past", MALE, "p", "סיימו");
-        finish.addForm("past", FEMALE, "p", "סיימו");
-        finish.addForm("inf", MALE, "ANY", "לסיים");
-        verbs.add(finish);
-
-        // --- פעלים מיוחדים לתבניות (רצה, צריך, הציע) ---
-        VerbTag offer = new VerbTag("offer");
-        offer.addForm("past", MALE, "s", "הציע");
-        offer.addForm("past", FEMALE, "s", "הציעה");
-        offer.addForm("past", MALE, "p", "הציעו");
-        offer.addForm("past", FEMALE, "p", "הציעו");
-        offer.addForm("inf", MALE, "ANY", "להציע");
-        verbs.add(offer);
-
-        VerbTag want = new VerbTag("want");
-        want.addForm("past", MALE, "s", "רצה");
-        want.addForm("past", FEMALE, "s", "רצתה");
-        want.addForm("past", MALE, "p", "רצו");
-        want.addForm("past", FEMALE, "p", "רצו");
-        want.addForm("inf", MALE, "ANY", "לרצות");
-
-        want.addForm("present", MALE, "s", "רוצה");
-        want.addForm("present", FEMALE, "s", "רוצה");
-        want.addForm("present", MALE, "p", "רוצים");
-        want.addForm("present", FEMALE, "p", "רוצות");
-        verbs.add(want);
-
-        VerbTag need = new VerbTag("need");
-        need.addForm("past", MALE, "s", "היה צריך");
-        need.addForm("past", FEMALE, "s", "הייתה צריכה");
-        need.addForm("past", MALE, "p", "היו צריכים");
-        need.addForm("past", FEMALE, "p", "היו צריכות");
-        need.addForm("inf", MALE, "ANY", "להצטרך");
-        verbs.add(need);
-
-        VerbTag be = new VerbTag("be");
-        be.addForm("past", MALE, "s", "היה");
-        be.addForm("past", FEMALE, "s", "הייתה");
-        be.addForm("past", MALE, "p", "היו");
-        be.addForm("past", FEMALE, "p", "היו");
-        be.addForm("inf", MALE, "ANY", "להיות");
-        verbs.add(be);
-
-        VerbTag can = new VerbTag("can");
-        can.addForm("past", MALE, "s", "יכל");
-        can.addForm("past", FEMALE, "s", "יכלה");
-        can.addForm("past", MALE, "p", "יכלו");
-        can.addForm("past", FEMALE, "p", "יכלו");
-        can.addForm("inf", MALE, "ANY", "להצליח");
-
-        can.addForm("present", MALE, "s", "יכול");
-        can.addForm("present", FEMALE, "s", "יכולה");
-        can.addForm("present", MALE, "p", "יכולים");
-        can.addForm("present", FEMALE, "p", "יכולות");
-        verbs.add(can);
-
-        VerbTag sit = new VerbTag("sit");
-        sit.addForm("past", MALE, "s", "ישב");
-        sit.addForm("past", FEMALE, "s", "ישבה");
-        sit.addForm("past", MALE, "p", "ישבו");
-        sit.addForm("past", FEMALE, "p", "ישבו");
-        sit.addForm("inf", MALE, "ANY", "לשבת");
-        verbs.add(sit);
-
-        VerbTag work = new VerbTag("work");
-        work.addForm("past", MALE, "s", "עבד");
-        work.addForm("past", FEMALE, "s", "עבדה");
-        work.addForm("past", MALE, "p", "עבדו");
-        work.addForm("past", FEMALE, "p", "עבדו");
-        work.addForm("inf", MALE, "ANY", "לעבוד");
-        verbs.add(work);
-
-        // --- הוסיף ---
-        VerbTag add = new VerbTag("add");
-
-        add.addForm("past", MALE, "s", "הוסיף");
-        add.addForm("past", FEMALE, "s", "הוסיפה");
-        add.addForm("past", MALE, "p", "הוסיפו");
-        add.addForm("past", FEMALE, "p", "הוסיפו");
-        add.addForm("inf", MALE, "ANY", "להוסיף");
-
-        add.addForm("present", MALE, "s", "מוסיף");
-        add.addForm("present", FEMALE, "s", "מוסיפה");
-        add.addForm("present", MALE, "p", "מוסיפים");
-        add.addForm("present", FEMALE, "p", "מוסיפות");
-
-
-        add.addForm("future", MALE, "s", "יוסיף");
-        add.addForm("future", FEMALE, "s", "תוסיף");
-        add.addForm("future", MALE, "p", "יוסיפו");
-        add.addForm("future", FEMALE, "p", "יוסיפו");
-        verbs.add(add);
-
-        VerbTag read = new VerbTag("read");
-        read.addForm("past", MALE, "s", "קרא");
-        read.addForm("past", FEMALE, "s", "קראה");
-        read.addForm("past", MALE, "p", "קראו");
-        read.addForm("past", FEMALE, "p", "קראו");
-
-        read.addForm("present", MALE, "s", "קורא");
-        read.addForm("present", FEMALE, "s", "קוראת");
-        read.addForm("present", MALE, "p", "קוראים");
-        read.addForm("present", FEMALE, "p", "קוראות");
-
-        read.addForm("inf", MALE, "ANY", "לקרוא");
-        verbs.add(read);
-
-        verbs.add(add);
-
-        VerbTag cut = new VerbTag("cut");
-        cut.addForm("past", MALE, "s", "חתך");
-        cut.addForm("past", FEMALE, "s", "חתכה");
-        add.addForm("past", MALE, "p", "חתכו");
-        add.addForm("past", FEMALE, "p", "חתכו");
-
-        cut.addForm("inf", MALE, "ANY", "לחתוך");
-        verbs.add(cut);
-
-        // --- הלך (walk) ---
-        VerbTag walk = new VerbTag("walk");
-        walk.addForm("past", MALE, "s", "הלך");
-        walk.addForm("past", FEMALE, "s", "הלכה");
-        walk.addForm("past", MALE, "p", "הלכו");
-        walk.addForm("past", FEMALE, "p", "הלכו");
-        walk.addForm("present", MALE, "s", "הולך");
-        walk.addForm("present", FEMALE, "s", "הולכת");
-        walk.addForm("present", MALE, "p", "הולכים");
-        walk.addForm("present", FEMALE, "p", "הולכות");
-        walk.addForm("inf", MALE, "ANY", "ללכת");
-        verbs.add(walk);
-
-        // הפועל "הפסיד / מפסיד" (lose_game) - מזהה חדש למניעת התנגשויות
-        VerbTag loseGame = new VerbTag("lose_game");
-        loseGame.addForm("present", MALE, "s", "מפסיד");
-        loseGame.addForm("present", FEMALE, "s", "מפסידה");
-        loseGame.addForm("past", MALE, "s", "הפסיד");
-        loseGame.addForm("past", FEMALE, "s", "הפסידה");
-        loseGame.addForm("past", MALE, "p", "הפסידו");
-        loseGame.addForm("past", FEMALE, "p", "הפסידו");
-        loseGame.addForm("inf", MALE, "ANY", "להפסיד");
-        verbs.add(loseGame);
-
-        VerbTag run = new VerbTag("run");
-        run.addForm("present", MALE, "s", "רץ");
-        run.addForm("present", FEMALE, "s", "רצה");
-        run.addForm("past", MALE, "s", "רץ");
-        run.addForm("past", FEMALE, "s", "רצה");
-        verbs.add(run);
-
-
-// --- הכין (prepare) ---
-        VerbTag prepare = new VerbTag("prepare");
-        prepare.addForm("past", MALE, "s", "הכין");
-        prepare.addForm("past", FEMALE, "s", "הכינה");
-        prepare.addForm("past", MALE, "p", "הכינו");
-        prepare.addForm("past", FEMALE, "p", "הכינו");
-        prepare.addForm("present", MALE, "s", "מכין");
-        prepare.addForm("present", FEMALE, "s", "מכינה");
-        prepare.addForm("present", MALE, "p", "מכינים");
-        prepare.addForm("present", FEMALE, "p", "מכינות");
-        prepare.addForm("inf", MALE, "ANY", "להכין");
-        verbs.add(prepare);
-
-// --- בחר (choose) ---
-        VerbTag choose = new VerbTag("choose");
-        choose.addForm("past", MALE, "s", "בחר");
-        choose.addForm("past", FEMALE, "s", "בחרה");
-        choose.addForm("past", MALE, "p", "בחרו");
-        choose.addForm("past", FEMALE, "p", "בחרו");
-        choose.addForm("present", MALE, "s", "בוחר");
-        choose.addForm("present", FEMALE, "s", "בוחרת");
-        choose.addForm("present", MALE, "p", "בוחרים");
-        choose.addForm("present", FEMALE, "p", "בוחרות");
-        choose.addForm("inf", MALE, "ANY", "לבחור");
-        verbs.add(choose);
-
-// --- כפל (multiply) ---
-        VerbTag multiply = new VerbTag("multiply");
-        multiply.addForm("past", MALE, "s", "כפל");
-        multiply.addForm("past", FEMALE, "s", "כפלה");
-        multiply.addForm("past", MALE, "p", "כפלו");
-        multiply.addForm("past", FEMALE, "p", "כפלו");
-        multiply.addForm("present", MALE, "s", "כופל");
-        multiply.addForm("present", FEMALE, "s", "כופלת");
-        multiply.addForm("present", MALE, "p", "כופלים");
-        multiply.addForm("present", FEMALE, "p", "כופלות");
-        multiply.addForm("inf", MALE, "ANY", "לכפול");
-        verbs.add(multiply);
-
-        VerbTag organize = new VerbTag("organize");
-        organize.addForm("past", MALE, "s", "סידר");
-        organize.addForm("past", FEMALE, "s", "סידרה");
-        organize.addForm("past", MALE, "p", "סידרו");
-        organize.addForm("past", FEMALE, "p", "סידרו");
-        organize.addForm("inf", MALE, "ANY", "לסדר");
-        verbs.add(organize);
-
-        VerbTag start = new VerbTag("start");
-        start.addForm("past", MALE, "s", "התחיל");
-        start.addForm("past", FEMALE, "s", "התחילה");
-        start.addForm("past", MALE, "p", "התחילו");
-        start.addForm("past", FEMALE, "p", "התחילו");
-        start.addForm("inf", MALE, "ANY", "להתחיל");
-        verbs.add(start);
-
-        // הפועל "שיחק / משחק" (play)
-        VerbTag play = new VerbTag("play");
-        play.addForm("present", MALE, "s", "משחק");
-        play.addForm("present", FEMALE, "s", "משחקת");
-        play.addForm("present", MALE, "p", "משחקים");
-        play.addForm("present", FEMALE, "p", "משחקות");
-        play.addForm("past", MALE, "s", "שיחק");
-        play.addForm("past", FEMALE, "s", "שיחקה");
-        play.addForm("past", MALE, "p", "שיחקו");
-        play.addForm("past", FEMALE, "p", "שיחקו");
-        play.addForm("inf", MALE, "ANY", "לשחק");
-        verbs.add(play);
-
-// הפועל "ניצח / מנצח" (win)
-        VerbTag win = new VerbTag("win");
-        win.addForm("present", MALE, "s", "מנצח");
-        win.addForm("present", FEMALE, "s", "מנצחת");
-        win.addForm("present", MALE, "p", "מנצחים");
-        win.addForm("present", FEMALE, "p", "מנצחות");
-        win.addForm("past", MALE, "s", "ניצח");
-        win.addForm("past", FEMALE, "s", "ניצחה");
-        win.addForm("past", MALE, "p", "ניצחו");
-        win.addForm("past", FEMALE, "p", "ניצחו");
-        win.addForm("inf", MALE, "ANY", "לנצח");
-        verbs.add(win);
+//        // --- קנה ---
+//        VerbTag buy = new VerbTag("buy");
+//        buy.addForm("past", MALE, "s", "קנה");
+//        buy.addForm("past", FEMALE, "s", "קנתה");
+//        buy.addForm("past", MALE, "p", "קנו");
+//        buy.addForm("past", FEMALE, "p", "קנו");
+//        buy.addForm("inf", MALE, "ANY", "לקנות");
+//        verbs.add(buy);
+//
+//        // --- אכל (לאוכל, מאפים וממתקים) ---
+//        VerbTag eat = new VerbTag("eat");
+//        eat.addForm("past", MALE, "s", "אכל");
+//        eat.addForm("past", FEMALE, "s", "אכלה");
+//        eat.addForm("past", MALE, "p", "אכלו");
+//        eat.addForm("past", FEMALE, "p", "אכלו");
+//        eat.addForm("inf", MALE, "ANY", "לאכול");
+//        verbs.add(eat);
+//
+//        // --- שתה (חדש - למשקאות!) ---
+//        VerbTag drink = new VerbTag("drink");
+//        drink.addForm("past", MALE, "s", "שתה");
+//        drink.addForm("past", FEMALE, "s", "שתתה");
+//        drink.addForm("past", MALE, "p", "שתו");
+//        drink.addForm("past", FEMALE, "p", "שתו");
+//        drink.addForm("inf", MALE, "ANY", "לשתות");
+//        verbs.add(drink);
+//
+//        // --- לבש (חדש - לביגוד!) ---
+//        VerbTag wear = new VerbTag("wear");
+//        wear.addForm("past", MALE, "s", "לבש");
+//        wear.addForm("past", FEMALE, "s", "לבשה");
+//        wear.addForm("past", MALE, "p", "לבשו");
+//        wear.addForm("past", FEMALE, "p", "לבשו");
+//        wear.addForm("inf", MALE, "ANY", "ללבוש");
+//        verbs.add(wear);
+//
+//        // --- תיקן (חדש - לטמבורייה ואלקטרוניקה!) ---
+//        VerbTag fix = new VerbTag("fix");
+//        fix.addForm("past", MALE, "s", "תיקן");
+//        fix.addForm("past", FEMALE, "s", "תיקנה");
+//        fix.addForm("past", MALE, "p", "תיקנו");
+//        fix.addForm("past", FEMALE, "p", "תיקנו");
+//        fix.addForm("inf", MALE, "ANY", "לתקן");
+//        verbs.add(fix);
+//
+//        // --- נתן ---
+//        VerbTag give = new VerbTag("give");
+//        give.addForm("past", MALE, "s", "נתן");
+//        give.addForm("past", FEMALE, "s", "נתנה");
+//        give.addForm("past", MALE, "p", "נתנו");
+//        give.addForm("past", FEMALE, "p", "נתנו");
+//        give.addForm("inf", MALE, "ANY", "לתת");
+//        verbs.add(give);
+//
+//        // --- קיבל ---
+//        VerbTag receive = new VerbTag("receive");
+//        receive.addForm("past", MALE, "s", "קיבל");
+//        receive.addForm("past", FEMALE, "s", "קיבלה");
+//        receive.addForm("past", MALE, "p", "קיבלו");
+//        receive.addForm("past", FEMALE, "p", "קיבלו");
+//        receive.addForm("inf", MALE, "ANY", "לקבל");
+//        verbs.add(receive);
+//
+//        // --- מצא ---
+//        VerbTag find = new VerbTag("find");
+//        find.addForm("past", MALE, "s", "מצא");
+//        find.addForm("past", FEMALE, "s", "מצאה");
+//        find.addForm("past", MALE, "p", "מצאו");
+//        find.addForm("past", FEMALE, "p", "מצאו");
+//        find.addForm("inf", MALE, "ANY", "למצוא");
+//        verbs.add(find);
+//
+//        // --- איבד ---
+//        VerbTag lose = new VerbTag("lose");
+//        lose.addForm("past", MALE, "s", "איבד");
+//        lose.addForm("past", FEMALE, "s", "איבדה");
+//        lose.addForm("past", MALE, "p", "איבדו");
+//        lose.addForm("past", FEMALE, "p", "איבדו");
+//        lose.addForm("inf", MALE, "ANY", "לאבד");
+//        verbs.add(lose);
+//
+//        // --- אסף ---
+//        VerbTag collect = new VerbTag("collect");
+//        collect.addForm("past", MALE, "s", "אסף");
+//        collect.addForm("past", FEMALE, "s", "אספה");
+//        collect.addForm("past", MALE, "p", "אספו");
+//        collect.addForm("past", FEMALE, "p", "אספו");
+//        collect.addForm("inf", MALE, "ANY", "לאסוף");
+//        verbs.add(collect);
+//
+//        // --- חילק ---
+//        VerbTag divide = new VerbTag("divide");
+//        divide.addForm("past", MALE, "s", "חילק");
+//        divide.addForm("past", FEMALE, "s", "חילקה");
+//        divide.addForm("past", MALE, "p", "חילקו");
+//        divide.addForm("past", FEMALE, "p", "חילקו");
+//        divide.addForm("inf", MALE, "ANY", "לחלק");
+//        verbs.add(divide);
+//
+//        // --- נכנס ---
+//        VerbTag enter = new VerbTag("enter");
+//        enter.addForm("past", MALE, "s", "נכנס");
+//        enter.addForm("past", FEMALE, "s", "נכנסה");
+//        enter.addForm("past", MALE, "p", "נכנסו");
+//        enter.addForm("past", FEMALE, "p", "נכנסו");
+//        enter.addForm("inf", MALE, "ANY", "להיכנס");
+//        verbs.add(enter);
+//
+//        // --- מכר ---
+//        VerbTag sell = new VerbTag("sell");
+//        sell.addForm("past", MALE, "s", "מכר");
+//        sell.addForm("past", FEMALE, "s", "מכרה");
+//        sell.addForm("past", MALE, "p", "מכרו");
+//        sell.addForm("past", FEMALE, "p", "מכרו");
+//        sell.addForm("inf", MALE, "ANY", "למכור");
+//        verbs.add(sell);
+//
+//        // --- לקח ---
+//        VerbTag take = new VerbTag("take");
+//        take.addForm("past", MALE, "s", "לקח");
+//        take.addForm("past", FEMALE, "s", "לקחה");
+//        take.addForm("past", MALE, "p", "לקחו");
+//        take.addForm("past", FEMALE, "p", "לקחו");
+//        take.addForm("inf", MALE, "ANY", "לקחת");
+//        verbs.add(take);
+//
+//        // --- שם / הניח ---
+//        VerbTag put = new VerbTag("put");
+//        put.addForm("past", MALE, "s", "שם");
+//        put.addForm("past", FEMALE, "s", "שמה");
+//        put.addForm("past", MALE, "p", "שמו");
+//        put.addForm("past", FEMALE, "p", "שמו");
+//        put.addForm("inf", MALE, "ANY", "לשים");
+//        verbs.add(put);
+//
+//        // --- סידר ---
+//        VerbTag arrange = new VerbTag("arrange");
+//        arrange.addForm("past", MALE, "s", "סידר");
+//        arrange.addForm("past", FEMALE, "s", "סידרה");
+//        arrange.addForm("past", MALE, "p", "סידרו");
+//        arrange.addForm("past", FEMALE, "p", "סידרו");
+//        arrange.addForm("inf", MALE, "ANY", "לסדר");
+//
+//        arrange.addForm("present", MALE, "s", "מסדר");
+//        arrange.addForm("present", FEMALE, "s", "מסדרת");
+//        arrange.addForm("present", MALE, "p", "מסדרים");
+//        arrange.addForm("present", FEMALE, "p", "מסדרות");
+//        verbs.add(arrange);
+//
+//        // --- שילם ---
+//        VerbTag pay = new VerbTag("pay");
+//        pay.addForm("past", MALE, "s", "שילם");
+//        pay.addForm("past", FEMALE, "s", "שילמה");
+//        pay.addForm("past", MALE, "p", "שילמו");
+//        pay.addForm("past", FEMALE, "p", "שילמו");
+//        pay.addForm("inf", MALE, "ANY", "לשלם");
+//
+//        pay.addForm("future", MALE, "s", "ישלם");
+//        pay.addForm("future", FEMALE, "s", "תשלם");
+//        pay.addForm("future", MALE, "p", "ישלמו");
+//        pay.addForm("future", FEMALE, "p", "ישלמו");
+//
+//        verbs.add(pay);
+//
+//        // --- חסך ---
+//        VerbTag save = new VerbTag("save");
+//        save.addForm("past", MALE, "s", "חסך");
+//        save.addForm("past", FEMALE, "s", "חסכה");
+//        save.addForm("past", MALE, "p", "חסכו");
+//        save.addForm("past", FEMALE, "p", "חסכו");
+//        save.addForm("inf", MALE, "ANY", "לחסוך");
+//        save.addForm("present", MALE, "s", "חוסך");
+//        save.addForm("present", FEMALE, "s", "חוסכת");
+//        save.addForm("present", MALE, "p", "חוסכים");
+//        save.addForm("present", FEMALE, "p", "חוסכות");
+//        verbs.add(save);
+//
+//        // --- סיים ---
+//        VerbTag finish = new VerbTag("finish");
+//        finish.addForm("past", MALE, "s", "סיים");
+//        finish.addForm("past", FEMALE, "s", "סיימה");
+//        finish.addForm("past", MALE, "p", "סיימו");
+//        finish.addForm("past", FEMALE, "p", "סיימו");
+//        finish.addForm("inf", MALE, "ANY", "לסיים");
+//        verbs.add(finish);
+//
+//        // --- פעלים מיוחדים לתבניות (רצה, צריך, הציע) ---
+//        VerbTag offer = new VerbTag("offer");
+//        offer.addForm("past", MALE, "s", "הציע");
+//        offer.addForm("past", FEMALE, "s", "הציעה");
+//        offer.addForm("past", MALE, "p", "הציעו");
+//        offer.addForm("past", FEMALE, "p", "הציעו");
+//        offer.addForm("inf", MALE, "ANY", "להציע");
+//        verbs.add(offer);
+//
+//        VerbTag want = new VerbTag("want");
+//        want.addForm("past", MALE, "s", "רצה");
+//        want.addForm("past", FEMALE, "s", "רצתה");
+//        want.addForm("past", MALE, "p", "רצו");
+//        want.addForm("past", FEMALE, "p", "רצו");
+//        want.addForm("inf", MALE, "ANY", "לרצות");
+//
+//        want.addForm("present", MALE, "s", "רוצה");
+//        want.addForm("present", FEMALE, "s", "רוצה");
+//        want.addForm("present", MALE, "p", "רוצים");
+//        want.addForm("present", FEMALE, "p", "רוצות");
+//        verbs.add(want);
+//
+//        VerbTag need = new VerbTag("need");
+//        need.addForm("past", MALE, "s", "היה צריך");
+//        need.addForm("past", FEMALE, "s", "הייתה צריכה");
+//        need.addForm("past", MALE, "p", "היו צריכים");
+//        need.addForm("past", FEMALE, "p", "היו צריכות");
+//        need.addForm("inf", MALE, "ANY", "להצטרך");
+//        verbs.add(need);
+//
+//        VerbTag be = new VerbTag("be");
+//        be.addForm("past", MALE, "s", "היה");
+//        be.addForm("past", FEMALE, "s", "הייתה");
+//        be.addForm("past", MALE, "p", "היו");
+//        be.addForm("past", FEMALE, "p", "היו");
+//        be.addForm("inf", MALE, "ANY", "להיות");
+//        verbs.add(be);
+//
+//        VerbTag can = new VerbTag("can");
+//        can.addForm("past", MALE, "s", "יכל");
+//        can.addForm("past", FEMALE, "s", "יכלה");
+//        can.addForm("past", MALE, "p", "יכלו");
+//        can.addForm("past", FEMALE, "p", "יכלו");
+//        can.addForm("inf", MALE, "ANY", "להצליח");
+//
+//        can.addForm("present", MALE, "s", "יכול");
+//        can.addForm("present", FEMALE, "s", "יכולה");
+//        can.addForm("present", MALE, "p", "יכולים");
+//        can.addForm("present", FEMALE, "p", "יכולות");
+//        verbs.add(can);
+//
+//        VerbTag sit = new VerbTag("sit");
+//        sit.addForm("past", MALE, "s", "ישב");
+//        sit.addForm("past", FEMALE, "s", "ישבה");
+//        sit.addForm("past", MALE, "p", "ישבו");
+//        sit.addForm("past", FEMALE, "p", "ישבו");
+//        sit.addForm("inf", MALE, "ANY", "לשבת");
+//        verbs.add(sit);
+//
+//        VerbTag work = new VerbTag("work");
+//        work.addForm("past", MALE, "s", "עבד");
+//        work.addForm("past", FEMALE, "s", "עבדה");
+//        work.addForm("past", MALE, "p", "עבדו");
+//        work.addForm("past", FEMALE, "p", "עבדו");
+//        work.addForm("inf", MALE, "ANY", "לעבוד");
+//        verbs.add(work);
+//
+//        // --- הוסיף ---
+//        VerbTag add = new VerbTag("add");
+//
+//        add.addForm("past", MALE, "s", "הוסיף");
+//        add.addForm("past", FEMALE, "s", "הוסיפה");
+//        add.addForm("past", MALE, "p", "הוסיפו");
+//        add.addForm("past", FEMALE, "p", "הוסיפו");
+//        add.addForm("inf", MALE, "ANY", "להוסיף");
+//
+//        add.addForm("present", MALE, "s", "מוסיף");
+//        add.addForm("present", FEMALE, "s", "מוסיפה");
+//        add.addForm("present", MALE, "p", "מוסיפים");
+//        add.addForm("present", FEMALE, "p", "מוסיפות");
+//
+//
+//        add.addForm("future", MALE, "s", "יוסיף");
+//        add.addForm("future", FEMALE, "s", "תוסיף");
+//        add.addForm("future", MALE, "p", "יוסיפו");
+//        add.addForm("future", FEMALE, "p", "יוסיפו");
+//        verbs.add(add);
+//
+//        VerbTag read = new VerbTag("read");
+//        read.addForm("past", MALE, "s", "קרא");
+//        read.addForm("past", FEMALE, "s", "קראה");
+//        read.addForm("past", MALE, "p", "קראו");
+//        read.addForm("past", FEMALE, "p", "קראו");
+//
+//        read.addForm("present", MALE, "s", "קורא");
+//        read.addForm("present", FEMALE, "s", "קוראת");
+//        read.addForm("present", MALE, "p", "קוראים");
+//        read.addForm("present", FEMALE, "p", "קוראות");
+//
+//        read.addForm("inf", MALE, "ANY", "לקרוא");
+//        verbs.add(read);
+//
+//        verbs.add(add);
+//
+//        VerbTag cut = new VerbTag("cut");
+//        cut.addForm("past", MALE, "s", "חתך");
+//        cut.addForm("past", FEMALE, "s", "חתכה");
+//        add.addForm("past", MALE, "p", "חתכו");
+//        add.addForm("past", FEMALE, "p", "חתכו");
+//
+//        cut.addForm("inf", MALE, "ANY", "לחתוך");
+//        verbs.add(cut);
+//
+//        // --- הלך (walk) ---
+//        VerbTag walk = new VerbTag("walk");
+//        walk.addForm("past", MALE, "s", "הלך");
+//        walk.addForm("past", FEMALE, "s", "הלכה");
+//        walk.addForm("past", MALE, "p", "הלכו");
+//        walk.addForm("past", FEMALE, "p", "הלכו");
+//        walk.addForm("present", MALE, "s", "הולך");
+//        walk.addForm("present", FEMALE, "s", "הולכת");
+//        walk.addForm("present", MALE, "p", "הולכים");
+//        walk.addForm("present", FEMALE, "p", "הולכות");
+//        walk.addForm("inf", MALE, "ANY", "ללכת");
+//        verbs.add(walk);
+//
+//        // הפועל "הפסיד / מפסיד" (lose_game) - מזהה חדש למניעת התנגשויות
+//        VerbTag loseGame = new VerbTag("lose_game");
+//        loseGame.addForm("present", MALE, "s", "מפסיד");
+//        loseGame.addForm("present", FEMALE, "s", "מפסידה");
+//        loseGame.addForm("past", MALE, "s", "הפסיד");
+//        loseGame.addForm("past", FEMALE, "s", "הפסידה");
+//        loseGame.addForm("past", MALE, "p", "הפסידו");
+//        loseGame.addForm("past", FEMALE, "p", "הפסידו");
+//        loseGame.addForm("inf", MALE, "ANY", "להפסיד");
+//        verbs.add(loseGame);
+//
+//        VerbTag run = new VerbTag("run");
+//        run.addForm("present", MALE, "s", "רץ");
+//        run.addForm("present", FEMALE, "s", "רצה");
+//        run.addForm("past", MALE, "s", "רץ");
+//        run.addForm("past", FEMALE, "s", "רצה");
+//        verbs.add(run);
+//
+//
+//// --- הכין (prepare) ---
+//        VerbTag prepare = new VerbTag("prepare");
+//        prepare.addForm("past", MALE, "s", "הכין");
+//        prepare.addForm("past", FEMALE, "s", "הכינה");
+//        prepare.addForm("past", MALE, "p", "הכינו");
+//        prepare.addForm("past", FEMALE, "p", "הכינו");
+//        prepare.addForm("present", MALE, "s", "מכין");
+//        prepare.addForm("present", FEMALE, "s", "מכינה");
+//        prepare.addForm("present", MALE, "p", "מכינים");
+//        prepare.addForm("present", FEMALE, "p", "מכינות");
+//        prepare.addForm("inf", MALE, "ANY", "להכין");
+//        verbs.add(prepare);
+//
+//// --- בחר (choose) ---
+//        VerbTag choose = new VerbTag("choose");
+//        choose.addForm("past", MALE, "s", "בחר");
+//        choose.addForm("past", FEMALE, "s", "בחרה");
+//        choose.addForm("past", MALE, "p", "בחרו");
+//        choose.addForm("past", FEMALE, "p", "בחרו");
+//        choose.addForm("present", MALE, "s", "בוחר");
+//        choose.addForm("present", FEMALE, "s", "בוחרת");
+//        choose.addForm("present", MALE, "p", "בוחרים");
+//        choose.addForm("present", FEMALE, "p", "בוחרות");
+//        choose.addForm("inf", MALE, "ANY", "לבחור");
+//        verbs.add(choose);
+//
+//// --- כפל (multiply) ---
+//        VerbTag multiply = new VerbTag("multiply");
+//        multiply.addForm("past", MALE, "s", "כפל");
+//        multiply.addForm("past", FEMALE, "s", "כפלה");
+//        multiply.addForm("past", MALE, "p", "כפלו");
+//        multiply.addForm("past", FEMALE, "p", "כפלו");
+//        multiply.addForm("present", MALE, "s", "כופל");
+//        multiply.addForm("present", FEMALE, "s", "כופלת");
+//        multiply.addForm("present", MALE, "p", "כופלים");
+//        multiply.addForm("present", FEMALE, "p", "כופלות");
+//        multiply.addForm("inf", MALE, "ANY", "לכפול");
+//        verbs.add(multiply);
+//
+//        VerbTag organize = new VerbTag("organize");
+//        organize.addForm("past", MALE, "s", "סידר");
+//        organize.addForm("past", FEMALE, "s", "סידרה");
+//        organize.addForm("past", MALE, "p", "סידרו");
+//        organize.addForm("past", FEMALE, "p", "סידרו");
+//        organize.addForm("inf", MALE, "ANY", "לסדר");
+//        verbs.add(organize);
+//
+//        VerbTag start = new VerbTag("start");
+//        start.addForm("past", MALE, "s", "התחיל");
+//        start.addForm("past", FEMALE, "s", "התחילה");
+//        start.addForm("past", MALE, "p", "התחילו");
+//        start.addForm("past", FEMALE, "p", "התחילו");
+//        start.addForm("inf", MALE, "ANY", "להתחיל");
+//        verbs.add(start);
+//
+//        // הפועל "שיחק / משחק" (play)
+//        VerbTag play = new VerbTag("play");
+//        play.addForm("present", MALE, "s", "משחק");
+//        play.addForm("present", FEMALE, "s", "משחקת");
+//        play.addForm("present", MALE, "p", "משחקים");
+//        play.addForm("present", FEMALE, "p", "משחקות");
+//        play.addForm("past", MALE, "s", "שיחק");
+//        play.addForm("past", FEMALE, "s", "שיחקה");
+//        play.addForm("past", MALE, "p", "שיחקו");
+//        play.addForm("past", FEMALE, "p", "שיחקו");
+//        play.addForm("inf", MALE, "ANY", "לשחק");
+//        verbs.add(play);
+//
+//// הפועל "ניצח / מנצח" (win)
+//        VerbTag win = new VerbTag("win");
+//        win.addForm("present", MALE, "s", "מנצח");
+//        win.addForm("present", FEMALE, "s", "מנצחת");
+//        win.addForm("present", MALE, "p", "מנצחים");
+//        win.addForm("present", FEMALE, "p", "מנצחות");
+//        win.addForm("past", MALE, "s", "ניצח");
+//        win.addForm("past", FEMALE, "s", "ניצחה");
+//        win.addForm("past", MALE, "p", "ניצחו");
+//        win.addForm("past", FEMALE, "p", "ניצחו");
+//        win.addForm("inf", MALE, "ANY", "לנצח");
+//        verbs.add(win);
 
         return verbs;
     }

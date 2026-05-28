@@ -4,7 +4,6 @@ import com.example.math_race.entities.BaseEntity;
 import com.example.math_race.entities.dictionary.*;
 import com.example.math_race.models.dictionary.DictionaryJsonSeeder;
 import com.example.math_race.questionGenerator.tags.types.*;
-import com.example.math_race.race.questions.MathQuestionGenerator;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -50,7 +49,11 @@ public class DictionaryRepository extends BaseRepository {
     }
 
     public List<VerbTag> loadVerbTag() {
-        return MathQuestionGenerator.fillVerbs();
+        return loadTagsOrSeed(
+                VerbEntity.class,
+                seeder::getVerbEntitiesFromJson,
+                VerbTag::new
+        );
     }
 
     public List<PlaceTag> loadPlaceTag() {

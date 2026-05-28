@@ -381,4 +381,50 @@
         <property name="deleted" type="boolean" column="deleted" not-null="true"/>
         <property name="deletionDate" type="java.util.Date" column="deletion_date"/>
     </class>
+
+    <class name="com.example.math_race.entities.dictionary.VerbEntity" table="verbs" lazy="false">
+        <id name="id" type="org.hibernate.type.UUIDBinaryType">
+            <column name="id" length="16" />
+            <generator class="org.hibernate.id.UUIDGenerator"/>
+        </id>
+
+        <property name="verbId" type="string" column="verb_id" not-null="true" index="idx_verb_id"/>
+
+        <set name="dbForms" table="verb_forms" lazy="false" cascade="all">
+            <key not-null="true">
+                <column name="verb_uuid" length="16" />
+            </key>
+
+            <composite-element class="com.example.math_race.entities.dictionary.VerbFormEntry">
+
+                <property name="tense" column="form_tense" length="20" not-null="true">
+                    <type name="org.hibernate.type.EnumType">
+                        <param name="enumClass">com.example.math_race.questionGenerator.tags.enums.Tense</param>
+                        <param name="useNamed">true</param>
+                    </type>
+                </property>
+
+                <property name="gender" column="form_gender" length="20" not-null="true">
+                    <type name="org.hibernate.type.EnumType">
+                        <param name="enumClass">com.example.math_race.questionGenerator.tags.enums.Gender</param>
+                        <param name="useNamed">true</param>
+                    </type>
+                </property>
+
+                <property name="plurality" column="form_plurality" length="20" not-null="true">
+                    <type name="org.hibernate.type.EnumType">
+                        <param name="enumClass">com.example.math_race.questionGenerator.tags.enums.Plurality</param>
+                        <param name="useNamed">true</param>
+                    </type>
+                </property>
+
+                <property name="value" type="string" column="form_value" length="100" not-null="true"/>
+            </composite-element>
+        </set>
+
+        <property name="creationDate" type="java.util.Date" column="creation_date" not-null="true"/>
+        <property name="updatedDate" type="java.util.Date" column="updated_date"/>
+        <property name="deleted" type="boolean" column="deleted" not-null="true"/>
+        <property name="deletionDate" type="java.util.Date" column="deletion_date"/>
+    </class>
 </hibernate-mapping>

@@ -19,6 +19,7 @@ public class DictionaryJsonSeeder {
     private static final String PLACE_JSON_PATH = "/dictionary_data/places.json";
     private static final String ROLE_JSON_PATH = "/dictionary_data/roles.json";
     private static final String UNIT_JSON_PATH = "/dictionary_data/units.json";
+    private static final String VERB_JSON_PATH = "/dictionary_data/verbs.json";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -44,6 +45,10 @@ public class DictionaryJsonSeeder {
 
     public List<UnitEntity> getUnitEntitiesFromJson() {
         return loadEntitiesFromJson(UNIT_JSON_PATH, new TypeReference<List<UnitJsonModel>>() {}, UnitEntity::new);
+    }
+
+    public List<VerbEntity> getVerbEntitiesFromJson() {
+        return loadEntitiesFromJson(VERB_JSON_PATH, new TypeReference<List<VerbJsonModel>>() {}, VerbEntity::new);
     }
 
     private <M, E> List<E> loadEntitiesFromJson(String jsonPath, TypeReference<List<M>> typeReference, Function<M, E> mapperFunction) {

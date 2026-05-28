@@ -95,7 +95,7 @@ public class RoleTag implements MatchableTag {
         }
 
         if (reqRoleType != null) {
-            if (!matchComplexExpression(reqRoleType, java.util.Collections.singleton(this.roleType), RoleType.class)) {
+            if (!matchComplexExpression(reqRoleType, java.util.Collections.singleton(this.roleType))) {
                 return false;
             }
         }

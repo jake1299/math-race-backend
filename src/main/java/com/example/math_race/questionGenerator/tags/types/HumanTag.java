@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.Map;
 
 import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexExpression;
+import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexStringExpression;
 
 @Data
 @AllArgsConstructor
@@ -67,9 +68,9 @@ public class HumanTag implements MatchableTag {
         }
 
         if (reqName != null) {
-            boolean isNegated = reqName.startsWith("!");
-            String val = isNegated ? reqName.substring(1).trim() : reqName;
-            if (isNegated == this.name.equalsIgnoreCase(val)) return false;
+            if (!matchComplexStringExpression(reqName.toUpperCase(), java.util.Collections.singleton(this.name.toUpperCase()))) {
+                return false;
+            }
         }
 
         if (reqGender != null) {
@@ -78,7 +79,7 @@ public class HumanTag implements MatchableTag {
             if (expr.equals("M") || expr.equals("!M")) expr = expr.replace("M", "MALE");
             if (expr.equals("F") || expr.equals("!F")) expr = expr.replace("F", "FEMALE");
 
-            return matchComplexExpression(expr, java.util.Collections.singleton(this.gender), Gender.class);
+            return matchComplexExpression(expr, java.util.Collections.singleton(this.gender));
         }
 
         return true;

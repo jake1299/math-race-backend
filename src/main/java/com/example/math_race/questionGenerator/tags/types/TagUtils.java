@@ -32,7 +32,7 @@ public class TagUtils {
         return isNegated != expressionMatch;
     }
 
-    public static <T extends Enum<T>> boolean matchComplexExpression(String rawExpr, Set<T> actualValues, Class<T> enumClass) {
+    public static <T extends Enum<T>> boolean matchComplexExpression(String rawExpr, Set<T> actualValues) {
         Set<String> stringValues = actualValues.stream()
                 .map(Enum::name)
                 .collect(Collectors.toSet());

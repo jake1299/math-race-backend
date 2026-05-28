@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.*;
 
 import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexExpression;
+import static com.example.math_race.questionGenerator.tags.types.TagUtils.matchComplexStringExpression;
 
 @Data
 @NoArgsConstructor
@@ -94,17 +95,15 @@ public class ItemTag implements MatchableTag {
         }
 
         if (reqType != null) {
-            if (!matchComplexExpression(reqType, this.categories, ItemCategory.class)) return false;
+            if (!matchComplexExpression(reqType, this.categories)) return false;
         }
 
         if (reqUnit != null) {
-            if (!matchComplexExpression(reqUnit, this.allowedUnits, UnitType.class)) return false;
+            if (!matchComplexExpression(reqUnit, this.allowedUnits)) return false;
         }
 
         if (reqId != null) {
-            boolean isNegated = reqId.startsWith("!");
-            String val = isNegated ? reqId.substring(1).trim() : reqId;
-            return isNegated != this.id.equalsIgnoreCase(val);
+            return matchComplexStringExpression(reqId.toUpperCase(), Collections.singleton(this.id.toUpperCase()));
         }
 
         return true;
